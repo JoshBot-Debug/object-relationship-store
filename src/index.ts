@@ -44,6 +44,7 @@ const store = createStore({
   }
 });
 
+
 console.log("\n\n1. UPSERT DATA INTO THE STORE\n")
 
 /**
@@ -356,5 +357,22 @@ const result1 = store.select({ from: "post", fields: ["id", "content"], where: {
 const selected3 = store.selectIndex("homeFeed-home", { post: { from: "post", fields: ["id"] } })
 isTrue("The post was removed from the index.", JSON.stringify(selected3) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6}]')
 
-//@ts-ignore
+// @ts-ignore
 isTrue("The content in the post was updated.", result1.content === 'Update fields if needed')
+
+
+/**
+ * Save state to storage.
+ * Restore state from storage.
+ */
+const storage: { myData: any } = {
+  myData: {}
+};
+
+store.save(data => {
+  // Save the data to storage.
+  storage.myData = data;
+})
+
+// You can get the data from storage and restore it.
+store.restore(storage.myData)

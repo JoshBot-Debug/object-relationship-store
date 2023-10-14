@@ -1,5 +1,11 @@
 ## @jjmyers/object-relationship-store
 
+## ☕ Support My Work
+Hey there! 👋 If my npm libraries have made your coding journey easier or sparked creativity, consider supporting my work with a virtual coffee. Your generosity keeps the code flowing and inspires more innovations! ☕🚀
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/joshuajosephmyers)
+
+
 A javascript object relationship store. Normalises data upserted and maintains relationships between objects.
 
 Built to work with react's **useSyncExternalStore()** hook.
@@ -367,5 +373,22 @@ isTrue("The post was removed from the index.", JSON.stringify(selected3) === '[{
 
 //@ts-ignore
 isTrue("The content in the post was updated.", result1.content === 'Update fields if needed')
+
+
+/**
+ * Save state to storage.
+ * Restore state from storage.
+ */
+const storage = {
+  myData: {}
+};
+
+store.save(data => {
+  // Save the data to storage.
+  storage.myData = data;
+})
+
+// You can get the data from storage and restore it.
+store.restore(storage.myData)
 
 ```
