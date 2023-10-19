@@ -2,3 +2,17 @@
 /package-lock.json
 /build
 /jjmyers-object-relationship-store-*.tgz
+
+# Docusaurus
+documentation/node_modules
+documentation/build
+documentation/.docusaurus
+documentation/.cache-loader
+documentation/.DS_Store
+documentation/.env.local
+documentation/.env.development.local
+documentation/.env.test.local
+documentation/.env.production.local
+documentation/npm-debug.log*
+documentation/yarn-debug.log*
+documentation/yarn-error.log*
