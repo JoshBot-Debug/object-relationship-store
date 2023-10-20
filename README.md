@@ -21,6 +21,8 @@ Read the [Docs](https://joshbot-debug.github.io/object-relationship-store/)
 
 Seeing as this package is getting more downloads lately, I've decided to update, add and make several changes. Here are all the things that changed!
 
+*Note: The docs are a work in progress...*
+
 - A proper [documentation](https://joshbot-debug.github.io/object-relationship-store/) has been added
 - **BREAKING CHANGE** Renamed `.upsert()` to `.mutate()`
 - **BREAKING CHANGE** Renamed `.upsertWhere()` to `.mutateWhere()`
