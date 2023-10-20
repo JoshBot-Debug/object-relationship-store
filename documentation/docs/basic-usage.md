@@ -187,3 +187,86 @@ const store = createStore({
 ```
 
 You are now ready to upsert the following objects: **User**, **Post**, **Image**, **Thumbnail**. The data will be normalised based on the relationship defined and selecting the data will be just as easy!
+
+## Mutate the store
+
+Use `store.mutate()` to set, update, delete objects. In fact, it's used to do everyting you can imagine with an object.
+
+You'll need to read the full documentation to understand it completely. However, if you just want an example and you'll take it from there, here's your example.
+
+```ts
+const post: Post = {id: 1, ...otherFields}
+
+store.mutate(post)
+```
+
+- Upsert many objects
+```ts
+const posts: Post[] = [...]
+
+store.mutate(posts)
+```
+
+- Update an object
+```ts
+store.mutate({
+  id: 1 // The post id that we want to update
+  content: "Updated content"
+})
+```
+
+- Update many objects
+```ts
+store.mutate([
+  {
+    id: 1 // The post id that we want to update
+    content: "Updated content 1"
+  },
+  {
+    id: 2 // The post id that we want to update
+    content: "Updated content 2"
+  }
+])
+```
+
+- Delete an object
+```ts
+store.mutate({
+  id: 1 // The post id that we want to update
+
+  /**
+   * The identifier function will not be able to identify this 
+   * object, so we use __identify__ to help it figure out what 
+   * object this is.
+   */
+  __identify__: "post", 
+
+  /**
+   * This will delete the object from the store, 
+   * all references will be removed.
+   */
+  __destroy__: true,
+})
+```
+
+## Select data from the store
+
+Here is an example of how you would select data from the store
+
+```ts
+const result = store.select({
+  from: "image",
+  fields: "*",
+  where: { aspectRatio: 0.777344 },
+  join: [
+    {
+      on: "thumbnails",
+      fields: ["id"]
+    }
+  ],
+})
+```
+
+## If you've made it this far, you are awesome. 
+
+That's all we're going to show here. Everything else will be covered [in the detailed documentation](https://google.com)

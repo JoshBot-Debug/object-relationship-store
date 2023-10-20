@@ -50,21 +50,21 @@ console.log("\n\n1. UPSERT DATA INTO THE STORE\n")
 /**
  * Upsert one object in the store
  */
-store.upsert(posts[0])
+store.mutate(posts[0])
 isTrue("One object upserted", Object.keys(store.getState().post).length === 1)
 
 
 /**
  * Upsert many objects in the store
  */
-store.upsert(posts)
+store.mutate(posts)
 isTrue("Many object upserted", Object.keys(store.getState().post).length === 5)
 
 
 /**
  * Upsert an object and manually determine the type
  */
-try { store.upsert({ id: 11 }) }
+try { store.mutate({ id: 11 }) }
 catch (error: any) {
   // Because this post does not contain a "caption" field, the identifier
   // will fail to identify the object
@@ -73,30 +73,30 @@ catch (error: any) {
 
 // If identifier cannot determine the type of the object, 
 // you can manually specify the type like this
-store.upsert({ id: 11, __identify__: "post" })
+store.mutate({ id: 11, __identify__: "post" })
 isTrue("Used __identify__ to determine the type of the object", Object.keys(store.getState().post).length === 6)
 
 
 // You can also use withOptions()
-store.upsert(withOptions({ id: 11 }, { __identify__: "post" }))
+store.mutate(withOptions({ id: 11 }, { __identify__: "post" }))
 isTrue("Used withOptions() to determine the type of the object", Object.keys(store.getState().post).length === 6)
 
 
 // withOptions() also accepts a callback on all options,
 // you can use the callback to check the object
-store.upsert(withOptions({ id: 11 }, { __identify__: o => { if (o.id === 11) { return "post" } throw new Error("Should never come here"); } }))
+store.mutate(withOptions({ id: 11 }, { __identify__: o => { if (o.id === 11) { return "post" } throw new Error("Should never come here"); } }))
 isTrue("Used withOptions() callback to determine the type of the object", Object.keys(store.getState().post).length === 6)
 
 
 // You can also use withOptions() to identify an array of objects
-store.upsert(withOptions([{ id: 11 }, { id: 12 }], { __identify__: "post" }))
+store.mutate(withOptions([{ id: 11 }, { id: 12 }], { __identify__: "post" }))
 isTrue("Used withOptions() to determine the type of an array of objects", Object.keys(store.getState().post).length === 7)
 
 
 // withOptions() also accepts a callback on all options,
 // you can use the callback to check all the objects
 try {
-  store.upsert(withOptions([{ id: 11 }, { id: 12 }], { __identify__: o => { if (o.id === 11) { return "post" } throw new Error(`id ${o.id}`); } }))
+  store.mutate(withOptions([{ id: 11 }, { id: 12 }], { __identify__: o => { if (o.id === 11) { return "post" } throw new Error(`id ${o.id}`); } }))
 } catch (error: any) {
   isTrue("Expect id 12 to not be identified.", error.message === "id 12")
 }
@@ -105,13 +105,13 @@ try {
 /**
  * So far we've seen a few ways to upsert data
  *
- * store.upsert({...someObject})
+ * store.mutate({...someObject})
  *
- * store.upsert([ {...someObject}, {...someOtherObject} ])
+ * store.mutate([ {...someObject}, {...someOtherObject} ])
  *
- * store.upsert({...someObject, __identify__: "post" })
+ * store.mutate({...someObject, __identify__: "post" })
  *
- * store.upsert(withOptions({...someObject}, { __identify__: "post" } ))
+ * store.mutate(withOptions({...someObject}, { __identify__: "post" } ))
  */
 
 console.log("\nEND OF UPSERT DEMO\n")
@@ -125,7 +125,7 @@ console.log("\n\n2. DELETE DATA FROM THE STORE\n")
  */
 isTrue("Post 12 exists", !!store.getState().post[12])
 
-store.upsert({ id: 12, __identify__: "post", __destroy__: true })
+store.mutate({ id: 12, __identify__: "post", __destroy__: true })
 
 isTrue("Post 12 does not exist", !store.getState().post[12])
 
@@ -145,7 +145,7 @@ isTrue("Profile image 52 exists on user 1", store.getState().user[1].profileImag
 
 // Delete an image where the id is 52
 // Destroy can be done on an array or a single object. You can also use withOptions()
-store.upsert({ id: 52, __identify__: "image", __destroy__: true })
+store.mutate({ id: 52, __identify__: "image", __destroy__: true })
 
 isTrue("Profile image 52 does not exist on user 1", store.getState().user[1].profileImage === undefined)
 
@@ -159,7 +159,7 @@ isTrue("User 2 has posts 10, 9, 6", JSON.stringify(store.getState().user[2].post
 isTrue("Post 10, 9, 6 all exist", !!store.getState().post[10] && !!store.getState().post[9] && !!store.getState().post[6])
 // Deleted user where id is 2
 // Destroy can be done on an array or a single object. You can also use withOptions()
-store.upsert(withOptions([{ id: 2 }], { __identify__: "user", __destroy__: true }))
+store.mutate(withOptions([{ id: 2 }], { __identify__: "user", __destroy__: true }))
 isTrue("User 2 is deleted", !store.getState().user[2])
 isTrue("Post 10, 9, 6 all deleted", !store.getState().post[10] && !store.getState().post[9] && !store.getState().post[6])
 
@@ -181,7 +181,7 @@ console.log("\nEND OF DELETE DEMO\n")
 console.log("\n\n3. SELECT DATA FROM THE STORE\n")
 
 // Upsert posts again so that we have data to work with
-store.upsert(posts)
+store.mutate(posts)
 
 /**
  * This is how you select data
@@ -285,8 +285,8 @@ console.log("\n\n4. SELECT DATA FROM INDEX\n")
 // Upsert data
 // Here we used withOptions() to upsert and array of posts to the store, and we
 // Also mentioned an index as an array or a single index
-// store.upsert(withOptions(posts, { __indexes__: ["homeFeed-home", "otherFeed-1"] }))
-store.upsert(withOptions(posts, { __indexes__: "homeFeed-home" }))
+// store.mutate(withOptions(posts, { __indexes__: ["homeFeed-home", "otherFeed-1"] }))
+store.mutate(withOptions(posts, { __indexes__: "homeFeed-home" }))
 
 /**
  * 
@@ -333,7 +333,7 @@ const selected = store.selectIndex("homeFeed-home", {
 isTrue("Result is the an array containg posts, in the order it was upserted.", JSON.stringify(selected) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6}]')
 
 // Here we upsert another post with ID of 5
-store.upsert(withOptions({ id: 5 }, { __indexes__: "homeFeed-home", __identify__: "post" }))
+store.mutate(withOptions({ id: 5 }, { __indexes__: "homeFeed-home", __identify__: "post" }))
 
 // We select the index again
 const selected2 = store.selectIndex("homeFeed-home", { post: { from: "post", fields: ["id"] } })
@@ -348,7 +348,7 @@ console.log("\nEND OF SELECT INDEX DEMO\n")
 
 // Here we upsert post with ID of 5, and remove it from the homeFeed-home index
 // Upsert with and update the current object if needed.
-store.upsert(withOptions({ id: 5, content: "Update fields if needed" }, { __removeFromIndexes__: "homeFeed-home", __identify__: "post" }))
+store.mutate(withOptions({ id: 5, content: "Update fields if needed" }, { __removeFromIndexes__: "homeFeed-home", __identify__: "post" }))
 
 // @ts-ignore
 const result1 = store.select({ from: "post", fields: ["id", "content"], where: { id: 5 } })

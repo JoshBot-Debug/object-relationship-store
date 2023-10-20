@@ -79,9 +79,9 @@ export function createStore<
   }
 
 
-  function upsert(object: ORS.StoreObject<N, I> | ORS.StoreObject<N, I>[]) {
+  function mutate(payload: ORS.StoreObject<N, I> | ORS.StoreObject<N, I>[]) {
 
-    const items = deepCopy(Array.isArray(object) ? object : [object]);
+    const items = deepCopy(Array.isArray(payload) ? payload : [payload]);
 
     // The key __indexes__ will be deleted after it's used so we need to 
     // get all the indexes before any operations
@@ -333,9 +333,9 @@ export function createStore<
 
 
     /**
-     * Upserts a single item. Calls itself recursively based on object relationship.
+     * mutates a single item. Calls itself recursively based on object relationship.
      */
-    function upsertOne(params: {
+    function mutateOne(params: {
       item: ORS.StoreObject<N, I>;
       parentName?: string;
       parentField?: string;
@@ -451,7 +451,7 @@ export function createStore<
                 return;
               }
 
-              upsertOne({
+              mutateOne({
                 item: item[field],
                 parentPrimaryKey: item[primaryKey],
                 parentField: field,
@@ -479,7 +479,7 @@ export function createStore<
             }
 
             item[field].forEach((oneItem: any) => {
-              upsertOne({
+              mutateOne({
                 item: oneItem,
                 parentPrimaryKey: item[primaryKey],
                 parentField: field,
@@ -556,7 +556,7 @@ export function createStore<
     }
 
 
-    items.forEach(item => !!item && upsertOne({ item }))
+    items.forEach(item => !!item && mutateOne({ item }))
 
 
     indexes
@@ -577,16 +577,16 @@ export function createStore<
     listeners.forEach(listener => listener());
   }
 
-  function upsertWhere<
+  function mutateWhere<
     N extends string,
     O extends Record<string, any>
   >(options: ORS.SelectOptions<N, O>, callback: (current: Partial<O> | null) => Partial<O> | null) {
     const current = select(options) as O | null;
     const next = callback(current) as O | O[] | null;
     if (!next) return;
-    if (Array.isArray(next)) return upsert(withOptions<any, any>(next, { __identify__: options.from }));
-    if (!current) return upsert({ ...next, __identify__: options.from });
-    upsert({ ...current, ...next, __identify__: options.from });
+    if (Array.isArray(next)) return mutate(withOptions<any, any>(next, { __identify__: options.from }));
+    if (!current) return mutate({ ...next, __identify__: options.from });
+    mutate({ ...current, ...next, __identify__: options.from });
   }
 
   const select = memo(<
@@ -664,8 +664,8 @@ export function createStore<
     purge,
     select,
     selectIndex,
-    upsert,
-    upsertWhere,
+    mutate,
+    mutateWhere,
     subscribe,
     destroy
   }

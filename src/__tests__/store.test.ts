@@ -27,16 +27,16 @@ const store = createStore({
   }
 });
 
-store.upsert(posts)
+store.mutate(posts)
 
 
 test("Memory should not increase when the same object is passed twice", () => {
 
-  store.upsert(posts)
+  store.mutate(posts)
 
   const memoryBefore = getObjectMemoryUsageInMB(store.getState());
 
-  store.upsert([...posts, ...posts, ...posts, ...posts, ...posts, ...posts])
+  store.mutate([...posts, ...posts, ...posts, ...posts, ...posts, ...posts])
 
   const memoryAfter = getObjectMemoryUsageInMB(store.getState());
 
