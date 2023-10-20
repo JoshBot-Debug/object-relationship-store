@@ -17,9 +17,9 @@ Hey there! 👋 If my npm libraries have made your coding journey easier or spar
 Read the [Docs](https://joshbot-debug.github.io/object-relationship-store/)
 
 
-### Major version release ^3.0.0
+### Major version release comming soon! ^3.0.0
 
-Seeing as this package is getting more downloads lately, I've decided to update, add and make several changes. Here are all the things that changed!
+Seeing as this package is getting more downloads lately, I've decided to update, add and make several changes. Here are all the things that will changed!
 
 *Note: The docs are a work in progress...*
 
