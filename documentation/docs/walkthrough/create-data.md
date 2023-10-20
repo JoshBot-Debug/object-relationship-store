@@ -4,13 +4,13 @@ sidebar_position: 3
 
 
 
-# Set data
+# Create data
 
-Set an object in the store
+Create an object in the store
 
 
 
-## Set one object
+## Create one object
 
 There are **3 different** ways data can be set in the store.
 - Using [`store.mutate()`](../apis/store.mutate)
