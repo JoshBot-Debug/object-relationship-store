@@ -376,3 +376,80 @@ store.save(data => {
 
 // You can get the data from storage and restore it.
 store.restore(storage.myData)
+
+
+store.mutate(posts);
+
+// const getUser = () => store.select<any, any>({
+//   from: "user",
+//   fields: ["id", "posts"],
+//   where: { id: 1 },
+//   join: [{ on: "posts", fields: ["id"] }]
+// })
+
+// const getPost = () => store.select<any, any>({
+//   from: "post",
+//   fields: ["id", "user"],
+//   where: { id: 7 },
+// })
+
+// console.log("User Before", getUser())
+
+// console.log(store.getReferences())
+// store.mutate({
+//   id: 1,
+//   __identify__: "user",
+//   posts: [8]
+// });
+// console.log(store.getReferences())
+
+// console.log("User After", getUser())
+// console.log("User After", getPost())
+
+
+// const getPost = () => store.select<any, any>({
+//   from: "post",
+//   fields: ["id", "user"],
+//   where: { id: 7 },
+// })
+
+// console.log("Post Before", getPost())
+
+// store.mutate({
+//   id: 7,
+//   __identify__: "post",
+//   user: null
+// });
+
+// console.log("Post After", getPost())
+// console.log("User After", store.select<any, any>({
+//   from: "user",
+//   fields: ["id", "posts"],
+//   where: { id: 1 },
+// }))
+// console.log(store.getReferences()["user"][1])
+// console.log(store.getReferences()["post"])
+
+
+const getUser = () => store.select<any, any>({
+  from: "user",
+  fields: ["id", "posts"],
+  where: { id: 1 },
+})
+
+console.log("Before", getUser())
+
+store.mutate({
+  id: 1,
+  __identify__: "user",
+  posts: [8]
+});
+
+console.log("User After", getUser())
+console.log("Post After", store.select<any, any>({
+  from: "post",
+  fields: ["id", "user"],
+  where: { id: 8 },
+}))
+console.log(store.getReferences()["user"][1])
+console.log(store.getReferences()["post"])

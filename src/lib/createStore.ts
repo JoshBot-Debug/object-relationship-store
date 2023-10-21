@@ -421,12 +421,42 @@ export function createStore<
         delete item.__removeFromIndexes__;
       }
 
-      // OUTDATED
-      // // Do not update indexes if we are inside an object,
-      // // If we receive posts[], update indexes, if post has a user, we traverse inside, do not update indexes for user or any children of post.
-      // if (!parentName) {
 
-      // }
+      /**
+       * Will remove all references
+       * @param ref The reference we want to clean
+       * @param targetPk The target pk.
+       */
+      function cleanReferences(ref: `${string}.${string}.${string}`, targetPk: string) {
+        const [tableName, id, field] = ref.split(".");
+
+        // @ts-ignore
+        const fieldRelationalObject = (model[tableName] as ORS.RelationalObject<N>);
+        const fieldRelationship = fieldRelationalObject.__relationship[field];
+
+        // @ts-ignore
+        const targetRelationalObject = (model[fieldRelationship.__name] as ORS.RelationalObject<N>);
+
+        const targetFieldAlias = Object
+          .values(targetRelationalObject.__relationship)
+          .find(v => v.__name === tableName)
+          ?.__alias as string;
+
+        if (!targetFieldAlias) throw new Error(`${targetRelationalObject.__name} did not have an alias. This was unexpected. Report this bug.`);
+
+        references.remove({ name: fieldRelationship.__name, primaryKey: targetPk, ref });
+        references.remove({ name: tableName, primaryKey: id, ref: `${fieldRelationship.__name}.${targetPk}.${targetFieldAlias}` });
+
+        const target = state[fieldRelationship.__name][targetPk][targetFieldAlias];
+        const isMany = Array.isArray(target)
+
+        if (isMany)
+          state[fieldRelationship.__name][targetPk][targetFieldAlias] = target.filter(t => t != id)
+        else
+          delete state[fieldRelationship.__name][targetPk][targetFieldAlias];
+
+        delete state[tableName][id][field];
+      }
 
 
       /**
@@ -436,20 +466,37 @@ export function createStore<
         .entries(item)
         .forEach(([field, value]: any) => {
 
+          const fieldRelationship = relationalObject.__relationship[field];
+
           // If this field is a related field, traverse in recursively
-          if (!!relationalObject.__relationship[field]) {
+          if (!!fieldRelationship) {
 
-            const hasMany = relationalObject.__relationship[field].__has === "hasMany";
+            const hasMany = fieldRelationship.__has === "hasMany";
 
-            if (!item[field]) return;
 
             if (!hasMany) {
 
-              // hasOne and the item is a foreign key
+              // If the item is null, we are removing this relationship and all references if any
+              if (item[field] === null) {
+                const pk = state[name][item[primaryKey]][field];
+
+                // Clear all relation between this object and the referenced object.
+                cleanReferences(`${name}.${item[primaryKey]}.${field}`, pk)
+                return
+              }
+
+              // hasOne and the item is a foreign key OR if it is null
               if (typeof item[field] !== "object") {
+
+                // If this foreign key object does not exist throw an error
+                if (!state[fieldRelationship.__name][item[field]]) throw new Error(`${fieldRelationship.__name} with primaryKey ${item[field]} does not exist.`);
+
                 state[name][item[primaryKey]][field] = item[field];
                 return;
               }
+
+              // If the item is not an object return
+              if (item[field] === null || item[field] === undefined || typeof item[field] !== "object") return;
 
               mutateOne({
                 item: item[field],
@@ -462,14 +509,16 @@ export function createStore<
 
             // hasMany and all the items are foreignKeys
             if (item[field].every((i: any) => typeof i !== "object")) {
-              const relationName = relationalObject.__relationship[field].__name;
+              // const relationName = fieldRelationship.__name;
               const itemPrimaryKey = item[primaryKey];
               const items = state[name][itemPrimaryKey][field];
               const next = [];
               for (let i = 0; i < items?.length; i++) {
                 const pk = items[i];
+
                 if (!item[field].includes(pk)) {
-                  references.remove({ name: relationName, primaryKey: pk, ref: `${name}.${itemPrimaryKey}.${field}` });
+                  const refs = references.current[fieldRelationship.__name]?.[pk]
+                  refs.forEach(ref => cleanReferences(ref, pk));
                   continue;
                 }
                 next.push(pk)
@@ -477,6 +526,9 @@ export function createStore<
               state[name][itemPrimaryKey][field] = next;
               return;
             }
+
+            // If the item is not an object return
+            if (item[field] === null || item[field] === undefined || typeof item[field] !== "object") return;
 
             item[field].forEach((oneItem: any) => {
               mutateOne({
