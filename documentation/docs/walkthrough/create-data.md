@@ -12,7 +12,7 @@ Create an object in the store
 
 ## Create one object
 
-There are **3 different** ways data can be set in the store.
+There are **3 different** ways data can be set in the store. This applies to creating, updating and deleting data.
 - Using [`store.mutate()`](../apis/store.mutate)
 - Using [`store.mutate()`](../apis/store.mutate) with [`__identify__`](../apis/store.mutate#__identify__)
 - Using [`store.mutate()`](../apis/store.mutate) with [`withOptions()`](../apis/withOptions) 

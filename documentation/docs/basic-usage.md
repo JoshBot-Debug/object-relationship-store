@@ -93,13 +93,13 @@ Lets define the relationship of these objects so that object-relationship-store 
 
 Before we move forward, remember this '**All objects must contain a unique identifier**' if they are to be upserted into the store. Generally this is the object's `primary key` which is the `id` field.
 
-- Import `createRelationalObject()`. We will use `createRelationalObject()` to define our objects.
+- Import [`createRelationalObject()`](./apis/createRelationalObject). We will use [`createRelationalObject()`](./apis/createRelationalObject) to define our objects.
 
 ```ts
 import { createRelationalObject } from "@jjmyers/object-relationship-store";
 ```
 
-- Define all objects. `createRelationalObject()` accepts two arguments
+- Define all objects. [`createRelationalObject()`](./apis/createRelationalObject) accepts two arguments
 the first argument is the `name` of the object, the second is the `primaryKey` field. All objects must have a unique identifier, this is usually the `primaryKey` which is the field `id`. **The default value for *primaryKey* is *id***.
 
 ```ts
@@ -110,7 +110,7 @@ const thumbnail = createRelationalObject("thumbnail")
 const post = createRelationalObject("post")
 ```
 
-- Define the relationship between each object. The `hasOne()` and `hasMany()` properties accepts two arguments. The first argument is the object we are referring to, the second argument is an alias. By default the name of the field in the target object, is the name of the referred object. In this case, a `Post` has a field `user` which is a `User` object. A `Post` has a field `images` which is an array of `Image` objects.
+- Define the relationship between each object. The [`hasOne()`](./apis/createRelationalObject#hasone) and [`hasMany()`](./apis/createRelationalObject#hasmany) properties accepts two arguments. The first argument is the object we are referring to, the second argument is an alias. By default the name of the field in the target object, is the name of the referred object. In this case, a `Post` has a field `user` which is a `User` object. A `Post` has a field `images` which is an array of `Image` objects.
 
 ```ts
 // "Post" has one "User" as user
@@ -130,7 +130,7 @@ image.hasMany(thumbnail, "thumbnails")
 
 Once you have finished defining the relationship of you objects, you are ready to create a store.
 
-- Pass all created objects into the property `relationalCreators`
+- Pass all created objects into the property [`relationalCreators`](./apis/createStore#relationalcreators)
 - Pass an identifier function for each object. ***This function will be used to identify an object when it is upserted into the store***
 
 ```ts
@@ -190,7 +190,7 @@ You are now ready to upsert the following objects: **User**, **Post**, **Image**
 
 ## Mutate the store
 
-Use `store.mutate()` to set, update, delete objects. In fact, it's used to do everyting you can imagine with an object.
+Use [`store.mutate()`](./apis/store.mutate) to set, update, delete objects. In fact, it's used to do everyting you can imagine with an object.
 
 You'll need to read the full documentation to understand it completely. However, if you just want an example and you'll take it from there, here's your example.
 

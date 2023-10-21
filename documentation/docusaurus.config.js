@@ -39,11 +39,7 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          // TODO
-          editUrl:
-            'https://github.com/JoshBot-Debug/object-relationship-store/documentation/',
+          editUrl: 'https://github.com/JoshBot-Debug/object-relationship-store/tree/main/documentation/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -55,8 +51,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      // image: 'img/docusaurus-social-card.jpg',
       navbar: {
         title: 'Object Relationship Store',
         logo: {
@@ -66,9 +60,9 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            sidebarId: 'docsSidebar',
             position: 'left',
-            label: 'Tutorial',
+            label: 'Docs',
           },
           {
             href: 'https://github.com/JoshBot-Debug/object-relationship-store',
@@ -81,11 +75,19 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Quick Links',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/intro',
+                label: 'Basic Usage',
+                to: '/docs/basic-usage',
+              },
+              {
+                label: 'Walkthrough',
+                to: '/docs/category/walkthrough',
+              },
+              {
+                label: 'API',
+                to: '/docs/category/apis',
               },
             ],
           },
@@ -108,7 +110,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Object Relationship Store, @jjmyers`,
+        copyright: `Copyright © ${new Date().getFullYear()} Object Relationship Store, Joshua Joseph Myers`,
       },
       prism: {
         theme: lightCodeTheme,
