@@ -55,7 +55,7 @@ test("Memory should not increase when we add more relationships", () => {
     }
   });
 
-  store1.upsert(posts)
+  store1.mutate(posts)
 
   const memoryStore1 = getObjectMemoryUsageInMB(store1.getState());
 
@@ -72,7 +72,7 @@ test("Memory should not increase when we add more relationships", () => {
     }
   });
 
-  store2.upsert(posts)
+  store2.mutate(posts)
 
   const memoryStore2 = getObjectMemoryUsageInMB(store2.getState());
 
@@ -94,9 +94,9 @@ test("upsertWhere", () => {
     }
   });
 
-  store1.upsert(posts)
+  store1.mutate(posts)
 
-  store1.upsertWhere<any, any>({
+  store1.mutateWhere<any, any>({
     from: "image",
     fields: ["id", "thumbnails"],
     where: {id: 54},
@@ -121,9 +121,9 @@ test("upsertByPk", () => {
     }
   });
 
-  store1.upsert(posts)
+  store1.mutate(posts)
 
-  store1.upsert({
+  store1.mutate({
     id: 10,
     user: 1,
     __identify__: "post",

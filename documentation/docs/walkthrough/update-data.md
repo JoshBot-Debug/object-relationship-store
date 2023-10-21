@@ -90,7 +90,7 @@ Let's say we have a `Post` object, the post belongs to `User` 1 and we want to c
 ```ts title="example-project/index.js"
 import { posts } from "./data.js";
 
-store.upsert(posts);
+store.mutate(posts);
 
 const getPost = () => store.select({
   from: "post",
@@ -105,9 +105,10 @@ const updatedPost = {
   id: 8,
   __identify__: "post",
   user: 2
+  // user: {id: 2, __identify__: "user"}
 }
 
-store.upsert(updatedPost);
+store.mutate(updatedPost);
 
 console.log("After", getPost())
 ```
@@ -116,4 +117,95 @@ Run `node index.js` and you should see this in the terminal.
 ```bash
 Before { id: 8, user: { id: 1, username: 'the_overlord' } }
 After { id: 8, user: { id: 2, username: 'qwerty' } }
+```
+
+## Remove a foreign key reference
+
+Sometimes we may want to remove a foreign key reference
+
+```ts title="example-project/index.js"
+import { posts } from "./data.js";
+
+store.mutate(posts);
+
+const getPost = () => store.select({
+  from: "post",
+  fields: ["id", "user"],
+  where: { id: 8 },
+  join: [{ on: "user", fields: ["id", "username"] }]
+})
+
+const getUser = () => store.select({
+  from: "user",
+  fields: ["id", "posts"],
+  where: { id: 1 },
+})
+
+
+console.log("Post Before", getPost())
+console.log("User Before", getUser())
+
+const updatedPost = {
+  id: 8,
+  __identify__: "post",
+  user: null // set as null to remove the reference
+}
+
+store.mutate(updatedPost);
+
+console.log("Post After", getPost())
+console.log("User After", getUser())
+```
+
+Run `node index.js` and you should see this in the terminal.
+```bash
+Post Before { id: 8, user: { id: 1, username: 'the_overlord' } }
+User Before { id: 1, posts: [ 8, 7 ] }
+Post After { id: 8 }
+User After { id: 1, posts: [ 7 ] }
+```
+
+This can also be done the other way around by removing `post` 7 from `user` 1
+
+
+```ts title="example-project/index.js"
+import { posts } from "./data.js";
+
+store.mutate(posts);
+
+const getPost = () => store.select({
+  from: "post",
+  fields: ["id", "user"],
+  where: { id: 8 },
+  join: [{ on: "user", fields: ["id", "username"] }]
+})
+
+const getUser = () => store.select({
+  from: "user",
+  fields: ["id", "posts"],
+  where: { id: 1 },
+})
+
+
+console.log("Post Before", getPost())
+console.log("User Before", getUser())
+
+const updatedPost = {
+  id: 1,
+  __identify__: "user",
+  posts: [7] // removing post 8 from user 1
+}
+
+store.mutate(updatedPost);
+
+console.log("Post After", getPost())
+console.log("User After", getUser())
+```
+
+Run `node index.js` and you should see this in the terminal.
+```bash
+Post Before { id: 8, user: { id: 1, username: 'the_overlord' } }
+User Before { id: 1, posts: [ 8, 7 ] }
+Post After { id: 8 }
+User After { id: 1, posts: [ 7 ] }
 ```
