@@ -110,7 +110,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Object Relationship Store, Joshua Joseph Myers`,
+        copyright: `Copyright © ${new Date().getFullYear()} @jjmyers/object-relationship-store, Joshua Joseph Myers`,
       },
       prism: {
         theme: lightCodeTheme,

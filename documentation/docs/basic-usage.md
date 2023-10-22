@@ -230,6 +230,10 @@ store.mutate([
 ```
 
 - Delete an object
+
+:::note
+Check [`__destroy__`](./api/store.mutate#__destroy__) and [`__identify__`](./api/store.mutate#__identify__)
+:::
 ```ts
 store.mutate({
   id: 1 // The post id that we want to update

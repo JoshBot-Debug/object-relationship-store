@@ -21,6 +21,9 @@ If you do not want this behaviour, you will have to do a **soft delete**. If you
 
 Once again, we will be using [`store.mutate()`](../api/store.mutate)
 
+:::note
+Check [`__destroy__`](../api/store.mutate#__destroy__) and [`__identify__`](../api/store.mutate#__identify__)
+:::
 ```ts title="example-project/index.js"
 import { posts } from "./data.js";
 

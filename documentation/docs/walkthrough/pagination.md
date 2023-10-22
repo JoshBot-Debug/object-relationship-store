@@ -236,6 +236,9 @@ homeFeed [ { id: 11 }, { id: 10 }, { id: 9 }, { id: 8 }, { id: 7 }, { id: 6 } ]
 
 The user deleted a post/hide a post, it needs to be remove from both feeds
 
+:::note
+Check [`__destroy__`](../api/store.mutate#__destroy__), [`__identify__`](../api/store.mutate#__identify__) and [`__removeFromIndexes__`](../api/store.mutate#__removefromindexes__)
+:::
 ```ts
 // Delete the post that was added
 // store.mutate({id: 8, __identify__: "post", __destroy__: true});
