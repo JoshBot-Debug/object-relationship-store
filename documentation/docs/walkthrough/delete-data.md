@@ -19,7 +19,7 @@ When deleting an object from the store, 2 rules apply.
 
 If you do not want this behaviour, you will have to do a **soft delete**. If you don't know what a **soft delete** is, ask ChatGPT!
 
-Once again, we will be using [`store.mutate()`](../apis/store.mutate)
+Once again, we will be using [`store.mutate()`](../api/store.mutate)
 
 ```ts title="example-project/index.js"
 import { posts } from "./data.js";
@@ -62,10 +62,10 @@ After null
 
 ## Delete many objects
 
-This is the same as deleting one object, except we will pass an array of object to [`store.mutate()`](../apis/store.mutate)
+This is the same as deleting one object, except we will pass an array of object to [`store.mutate()`](../api/store.mutate)
 
-:::tip Using [`withOptions()`](../apis/withOptions)
-Here we used the helper function [`withOptions()`](../apis/withOptions) to apply a common payload to all `user` objects in `usersToDelete`
+:::tip Using [`withOptions()`](../api/withOptions)
+Here we used the helper function [`withOptions()`](../api/withOptions) to apply a common payload to all `user` objects in `usersToDelete`
 :::
 ```ts
 const usersToDelete = [{id: 1}, {id: 2}]

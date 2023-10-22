@@ -16,7 +16,7 @@ Updating an object is the same as setting an object in the store. The only diffe
 
 Here we will add a **new** user object into the store and then **update** it.
 
-***Read [`store.mutate()`](../apis/store.mutate). For more information on dealing with many objects, etc.***
+***Read [`store.mutate()`](../api/store.mutate). For more information on dealing with many objects, etc.***
 
 ```ts title="example-project/index.js"
 

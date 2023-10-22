@@ -53,7 +53,7 @@ Here is the relationship we can see based on the above structure.
 
 Now that we have an idea of what the data we will be upserting into the store looks like, we can start creating the model and define their relationships.
 
-To define object and relationships, we need to use [`createRelationalObject()`](../apis/createRelationalObject)
+To define object and relationships, we need to use [`createRelationalObject()`](../api/createRelationalObject)
 
 ```ts title="example-project/index.js"
 import { createRelationalObject } from "@jjmyers/object-relationship-store";
@@ -83,14 +83,14 @@ image.hasMany(thumbnail, "thumbnails")
 user.hasMany(post, "posts")
 ```
 
-So far, we have used [`createRelationalObject()`](../apis/createRelationalObject) to define our objects and their relationships.  
+So far, we have used [`createRelationalObject()`](../api/createRelationalObject) to define our objects and their relationships.  
 *Note: Even though the data we receive does not contain a `User` object that has a field `posts` that contains many `Post` objects, we have still defined this relationship.*
 
 
 ## Create the store
 
-Now we can use [`createStore()`](../apis/createStore) to create a **store** using the **models** we defined. We will also have to tell the store how to identify an object.  
-The store will use these [`identifier`](../apis/createStore#identifier) functions to identify the type of the object **if it is not specified in the object.** *(Will be discussed later.)*
+Now we can use [`createStore()`](../api/createStore) to create a **store** using the **models** we defined. We will also have to tell the store how to identify an object.  
+The store will use these [`identifier`](../api/createStore#identifier) functions to identify the type of the object **if it is not specified in the object.** *(Will be discussed later.)*
 
 ```ts title="example-project/index.js"
 import { createStore } from "@jjmyers/object-relationship-store";

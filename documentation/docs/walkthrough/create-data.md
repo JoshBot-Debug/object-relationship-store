@@ -13,13 +13,13 @@ Create an object in the store
 ## Create one object
 
 There are **3 different** ways data can be set in the store. This applies to creating, updating and deleting data.
-- Using [`store.mutate()`](../apis/store.mutate)
-- Using [`store.mutate()`](../apis/store.mutate) with [`__identify__`](../apis/store.mutate#__identify__)
-- Using [`store.mutate()`](../apis/store.mutate) with [`withOptions()`](../apis/withOptions) 
+- Using [`store.mutate()`](../api/store.mutate)
+- Using [`store.mutate()`](../api/store.mutate) with [`__identify__`](../api/store.mutate#__identify__)
+- Using [`store.mutate()`](../api/store.mutate) with [`withOptions()`](../api/withOptions) 
 
 
 
-### Using [`store.mutate()`](../apis/store.mutate)
+### Using [`store.mutate()`](../api/store.mutate)
 
 Here we will add a new user object into the store.
 
@@ -42,11 +42,11 @@ Run `node index.js` and you should see this in the terminal.
 
 
 
-### Using [`store.mutate()`](../apis/store.mutate) with [`__identify__`](../apis/store.mutate#__identify__)
+### Using [`store.mutate()`](../api/store.mutate) with [`__identify__`](../api/store.mutate#__identify__)
 
 When we created our store, in the identifier, we used the field `username`
 to identify an object as a `User` object.  
-Here we upsert a user object without the field `username` and instead passed [`__identify__`](../apis/store.mutate#__identify__) to tell
+Here we upsert a user object without the field `username` and instead passed [`__identify__`](../api/store.mutate#__identify__) to tell
 the store what type of object we are dealing with.
 
 Check the value of `user` in `identifier` in [`the store we created`](./create-a-store#create-the-store)
@@ -70,9 +70,9 @@ Run `node index.js` and you should see this in the terminal.
 
 
 
-### Using [`store.mutate()`](../apis/store.mutate) with [`withOptions()`](../apis/withOptions)
+### Using [`store.mutate()`](../api/store.mutate) with [`withOptions()`](../api/withOptions)
 
-[`withOptions()`](../apis/withOptions) is a helper function used to set values like [`__identify__`](../apis/store.mutate#__identify__) 
+[`withOptions()`](../api/withOptions) is a helper function used to set values like [`__identify__`](../api/store.mutate#__identify__) 
 on an object(s). We will cover all the rest later.
 
 This helper function may prove to be useful sooner or later.

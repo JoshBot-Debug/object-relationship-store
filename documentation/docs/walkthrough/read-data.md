@@ -6,12 +6,12 @@ sidebar_position: 4
 
 # Read data
 
-Read an object from the store. We will be using [`store.select()`](../apis/store.select) to retrieve data from the store.
+Read an object from the store. We will be using [`store.select()`](../api/store.select) to retrieve data from the store.
 
 
 ## Get object by `primaryKey`
 
-Select all [`fields`](../apis/store.select#fields) [`from`](../apis/store.select#from) `user` [`where`](../apis/store.select#where) `id` is 1.
+Select all [`fields`](../api/store.select#fields) [`from`](../api/store.select#from) `user` [`where`](../api/store.select#where) `id` is 1.
 
 When selecting by `primaryKey`, you will only receive one object or `null`.
 
@@ -53,12 +53,12 @@ Run `node index.js` and you should see this in the terminal.
 
 ## Get object by field value
 
-Select all [`fields`](../apis/store.select#fields) [`from`](../apis/store.select#from) `user` [`where`](../apis/store.select#where) `username` starts with *qw*.
+Select all [`fields`](../api/store.select#fields) [`from`](../api/store.select#from) `user` [`where`](../api/store.select#where) `username` starts with *qw*.
 
-When selecting by any field that is not the `primaryKey`, you will receive an array of objects that matched the [`where`](../apis/store.select#where) clause.
+When selecting by any field that is not the `primaryKey`, you will receive an array of objects that matched the [`where`](../api/store.select#where) clause.
 
 :::tip Where clause
-The [`where`](../apis/store.select#where) clause accepts an object, an array of objects or a function.
+The [`where`](../api/store.select#where) clause accepts an object, an array of objects or a function.
 :::
 
 ```ts title="example-project/index.js"
@@ -86,15 +86,15 @@ Run `node index.js` and you should see this in the terminal.
 
 ## Get many objects
 
-Select all [`fields`](../apis/store.select#fields) [`from`](../apis/store.select#from) `user` [`where`](../apis/store.select#where) `id` in 1,2.
+Select all [`fields`](../api/store.select#fields) [`from`](../api/store.select#from) `user` [`where`](../api/store.select#where) `id` in 1,2.
 
-You can get many objects by `primaryKey` by passing an array of objects into the [`where`](../apis/store.select#where) clause
+You can get many objects by `primaryKey` by passing an array of objects into the [`where`](../api/store.select#where) clause
 
 :::tip Here's a tip
-When a [`where`](../apis/store.select#where) clause contains a `primaryKey` field, all other fields are ignored and the data is selected by `primaryKey`.
+When a [`where`](../api/store.select#where) clause contains a `primaryKey` field, all other fields are ignored and the data is selected by `primaryKey`.
 `where: [{id: 1}, {id: 2, username: "Some non existent name"}]`
 
-In this [`where`](../apis/store.select#where) clause, you will still get `user` 1 and 2.
+In this [`where`](../api/store.select#where) clause, you will still get `user` 1 and 2.
 :::
 
 ```ts title="example-project/index.js"
@@ -154,10 +154,10 @@ console.log(selectedUser2);
 
 In the examples above, you would have noticed that the field value for `profileImage` was a `primaryKey` and the value for `posts` was an array of `primaryKey`.
 
-Here we will [`join`](../apis/store.select#join) those objects.
+Here we will [`join`](../api/store.select#join) those objects.
 
 :::tip Join
-The [`join`](../apis/store.select#join) will not work if you do not select that field. In this example, we are selecting all fields `*`,
+The [`join`](../api/store.select#join) will not work if you do not select that field. In this example, we are selecting all fields `*`,
 :::
 
 ```ts title="example-project/index.js"

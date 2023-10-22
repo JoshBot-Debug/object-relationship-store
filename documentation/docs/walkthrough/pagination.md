@@ -26,12 +26,12 @@ Let's say we create a new `Post` and the server returns the new `Post`, now we a
 
 Instead of manually handling adding a `Post` to certain pages after some action, it would be better if the `post` just adds itself and sorts itself correctly.
 
-This is why we have [`createRelationalObjectIndex()`](../apis/createRelationalObjectIndex). We can create an index that [`sorts`](../apis/createRelationalObjectIndex#sort) our objects and maintains an index for us to perform [`select`](../apis/store.select) operations on.
+This is why we have [`createRelationalObjectIndex()`](../api/createRelationalObjectIndex). We can create an index that [`sorts`](../api/createRelationalObjectIndex#sort) our objects and maintains an index for us to perform [`select`](../api/store.select) operations on.
 
 
-## Setting up [`createRelationalObjectIndex()`](../apis/createRelationalObjectIndex)
+## Setting up [`createRelationalObjectIndex()`](../api/createRelationalObjectIndex)
 
-First we need to define an index and pass it to our [`createStore()`](../apis/createStore#indexes) function.
+First we need to define an index and pass it to our [`createStore()`](../api/createStore#indexes) function.
 
 ```ts title="example-project/index.js"
 const user = createRelationalObject("user")
@@ -78,11 +78,11 @@ One important thing to note is how object indexes are named.
 
 We named the index **postFeed**
 
-We selected the data using [`store.selectIndex()`](../apis/store.selectIndex)
+We selected the data using [`store.selectIndex()`](../api/store.selectIndex)
 
 
 :::tip Important Links
-Read up on [`createRelationalObjectIndex()`](../apis/createRelationalObjectIndex) and [`__indexes__`](../apis/store.mutate#__indexes__) for more information
+Read up on [`createRelationalObjectIndex()`](../api/createRelationalObjectIndex) and [`__indexes__`](../api/store.mutate#__indexes__) for more information
 :::
 ```ts
 const postFeed = createRelationalObjectIndex("postFeed", [post], (a, b) => a.id > b.id ? -1 : 1)
@@ -94,11 +94,11 @@ When we upsert data into this feed, we need to specify the **`name`-`uniqueKey`*
 store.mutate({...myPost}, {__indexes__: ["postFeed-home"]});
 ```
 
-When we select data from this index using a [`name`](../apis/store.selectIndex#name), we need to use **`name`-`uniqueKey`** to identify the index and pass a [`selector`](../apis/store.select) for that object
+When we select data from this index using a [`name`](../api/store.selectIndex#name), we need to use **`name`-`uniqueKey`** to identify the index and pass a [`selector`](../api/store.select) for that object
 
 
 :::tip Important Links
-Read up on [`store.selectIndex()`](../apis/store.selectIndex) for more information
+Read up on [`store.selectIndex()`](../api/store.selectIndex) for more information
 :::
 ```ts
 const homeFeed = store.selectIndex(
@@ -121,7 +121,7 @@ const homeFeed = store.selectIndex(
 
 Lets do this using examples.
 
-We will make use of [`withOptions()`](../apis/withOptions) here.
+We will make use of [`withOptions()`](../api/withOptions) here.
 
 ### Home Page
 
@@ -152,7 +152,7 @@ const homeFeed = store.selectIndex(`postFeed-home`, {
 
 console.log("homeFeed", homeFeed)
 ```
-We received all posts in decending order because of our [`sort`](../apis/createRelationalObjectIndex#sort) function
+We received all posts in decending order because of our [`sort`](../api/createRelationalObjectIndex#sort) function
 Run `node index.js` and you should see this in the terminal.
 ```bash
 homeFeed [ { id: 10 }, { id: 9 }, { id: 8 }, { id: 7 }, { id: 6 } ]
@@ -182,7 +182,7 @@ const profileFeed = store.selectIndex(`postFeed-1`, {
 
 console.log("profileFeed", profileFeed)
 ```
-We received all posts in decending order because of our [`sort`](../apis/createRelationalObjectIndex#sort) function
+We received all posts in decending order because of our [`sort`](../api/createRelationalObjectIndex#sort) function
 Run `node index.js` and you should see this in the terminal.
 ```bash
 profileFeed [ { id: 8 }, { id: 7 } ]
@@ -256,4 +256,11 @@ console.log("homeFeed", store.selectIndex(`postFeed-1`, {
     fields: ["id"],
   }
 }))
+```
+
+As you can see, post with id 8 has been removed from both indexes
+Run `node index.js` and you should see this in the terminal.
+```bash
+ProfileFeed [ { id: 11 }, { id: 10 }, { id: 9 }, { id: 7 }, { id: 6 } ]
+homeFeed [ { id: 11 }, { id: 7 } ]
 ```
