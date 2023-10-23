@@ -14,7 +14,7 @@ Hey there! 👋 If my npm libraries have made your coding journey easier or spar
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/joshuajosephmyers)
 
-### Major version release comming soon! ^3.0.0
+### Major version release.
 
 Seeing as this package is getting more downloads lately, I've decided to update, add and make several changes. Here are all the things that will changed!
 
