@@ -152,7 +152,7 @@ const homeFeed = store.selectIndex(`postFeed-home`, {
 
 console.log("homeFeed", homeFeed)
 ```
-We received all posts in decending order because of our [`sort`](../api/createRelationalObjectIndex#sort) function
+We received all posts in decending order because of our [`sort`](../api/createRelationalObjectIndex#sortingFunction) function
 Run `node index.js` and you should see this in the terminal.
 ```bash
 homeFeed [ { id: 10 }, { id: 9 }, { id: 8 }, { id: 7 }, { id: 6 } ]
@@ -182,7 +182,7 @@ const profileFeed = store.selectIndex(`postFeed-1`, {
 
 console.log("profileFeed", profileFeed)
 ```
-We received all posts in decending order because of our [`sort`](../api/createRelationalObjectIndex#sort) function
+We received all posts in decending order because of our [`sort`](../api/createRelationalObjectIndex#sortingFunction) function
 Run `node index.js` and you should see this in the terminal.
 ```bash
 profileFeed [ { id: 8 }, { id: 7 } ]
