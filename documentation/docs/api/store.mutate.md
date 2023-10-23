@@ -155,3 +155,45 @@ store.mutate({
   __destroy__: true
 })
 ```
+
+
+## API
+
+### Properties
+
+<table>
+  <thead>
+    <tr>
+      <th width="10%">Property</th>
+      <th width="10%">Type</th>
+      <th width="10%">Default</th>
+      <th width="40%">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>__identify__</code></td>
+      <td><code>string</code></td>
+      <td><code>undefined</code></td>
+      <td>Used to define the type of the object when the identifier function will not work.</td>
+    </tr>
+    <tr>
+      <td><code>__destroy__</code></td>
+      <td><code>boolean</code></td>
+      <td><code>undefined</code></td>
+      <td>When <code>true</code> the object will be deleted from the store. All references to the object and all orphaned children will be deleted.</td>
+    </tr>
+    <tr>
+      <td><code>__indexes__</code></td>
+      <td><code>string[]</code></td>
+      <td><code>undefined</code></td>
+      <td>When an object is being created in the store, the object will also be added to all these indexes.</td>
+    </tr>
+    <tr>
+      <td><code>__removeFromIndexes__</code></td>
+      <td><code>string[]</code></td>
+      <td><code>undefined</code></td>
+      <td>When set, the object will be removed from all matching indexes.</td>
+    </tr>
+  </tbody>
+</table>
