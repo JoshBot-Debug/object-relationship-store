@@ -158,7 +158,7 @@ const store = createStore({
 Lets look at what we've got so far
 
 ```ts
-import { createRelationalObject } from "@jjmyers/object-relationship-store";
+import { createRelationalObject, createStore } from "@jjmyers/object-relationship-store";
 
 const user = createRelationalObject("user")
 const image = createRelationalObject("image")
