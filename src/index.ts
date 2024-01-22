@@ -2,454 +2,599 @@ import { posts as anArrayOfPostObjects } from "./data";
 import withOptions from "./lib/helper/withOptions";
 import { createStore, createRelationalObject, createRelationalObjectIndex } from "./lib/index";
 
-/**
- * Example data
- */
-const posts = [...anArrayOfPostObjects]
 
-// A helper function for the documentation.
-// Don't write tests like this, use jest or something else.
-const isTrue = (message: string, value: boolean) => {
-  if (!value) throw new Error(`Value was not true! - ${message}`);
-  console.log(`[${String(value).toUpperCase()}] ${message}`)
-}
+const user = createRelationalObject("user");
+const image = createRelationalObject("image");
+const imageThumbnail = createRelationalObject("thumbnail");
+const post = createRelationalObject("post");
+const postComment = createRelationalObject("postComment");
+const following = createRelationalObject("following");
 
-const user = createRelationalObject("user")
-const image = createRelationalObject("image")
-const thumbnail = createRelationalObject("thumbnail")
-const post = createRelationalObject("post")
+const blockedUsers = createRelationalObjectIndex(
+  "blockedUsers",
+  [user],
+  (a, b) => (a.id > b.id ? -1 : 1)
+);
+const profilePosts = createRelationalObjectIndex(
+  "profilePosts",
+  [post],
+  (a, b) => (a.id > b.id ? -1 : 1)
+);
+const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) =>
+  a.id > b.id ? -1 : 1
+);
+const postComments = createRelationalObjectIndex(
+  "postComments",
+  [postComment],
+  (a, b) => (a.id > b.id ? -1 : 1)
+);
 
-const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) => a.id > b.id ? -1 : 1)
+postComment.hasMany(postComment, "replies");
+postComment.hasOne(postComment, "replyingTo");
+postComment.hasOne(post);
+postComment.hasOne(user);
 
-post.hasOne(user)
-post.hasMany(image, "images")
+post.hasOne(user);
+post.hasMany(image, "images");
 
-user.hasMany(post, "posts")
-user.hasOne(image, "profileImage")
-image.hasMany(thumbnail, "thumbnails")
+user.hasOne(image, "profileImage");
+user.hasOne(image, "bannerImage");
+user.hasOne(image, "layoutImage");
+image.hasMany(imageThumbnail, "thumbnails");
+
+following.hasOne(user);
+following.hasOne(user, "following");
+
+const message = createRelationalObject("message");
+const room = createRelationalObject("room");
+const roomParticipant = createRelationalObject("roomParticipant");
+const messageRoom = createRelationalObjectIndex(
+  "messageRoom",
+  [message],
+  (a, b) => (a.id > b.id ? -1 : 1)
+);
+
+room.hasOne(roomParticipant, "participant");
+room.hasMany(roomParticipant, "participants");
+room.hasMany(message, "messages");
+room.hasMany(user, "typing");
+roomParticipant.hasOne(room, "room");
+roomParticipant.hasOne(user, "user");
+roomParticipant.hasOne(user, "privateOtherUser");
+room.hasOne(image, "image");
+room.hasOne(image, "backgroundImage");
+user.hasMany(roomParticipant, "roomMembership");
+
+const inbox = createRelationalObjectIndex("inbox", [room], (a, b) =>
+  +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
+);
+const groups = createRelationalObjectIndex("groups", [room], (a, b) =>
+  +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
+);
+const members = createRelationalObjectIndex(
+  "members",
+  [roomParticipant],
+  (a, b) => (+new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1)
+);
+const followings = createRelationalObjectIndex(
+  "follow",
+  [following],
+  (a, b) => (+new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1)
+);
 
 const store = createStore({
   relationalCreators: [
     user,
     image,
-    thumbnail,
+    imageThumbnail,
     post,
+    postComment,
+    room,
+    roomParticipant,
+    message,
+    following
   ],
-  indexes: [homeFeed],
+  indexes: [
+    homeFeed,
+    postComments,
+    profilePosts,
+    blockedUsers,
+    inbox,
+    groups,
+    messageRoom,
+    members,
+    followings,
+  ],
   identifier: {
-    user: o => "username" in o,
-    post: o => "caption" in o,
-    image: o => "aspectRatio" in o,
-    thumbnail: o => "uri" in o,
-  }
+    user: (o) => "username" in o,
+    post: (o) => "caption" in o,
+    image: (o) => "baseScale" in o,
+    thumbnail: (o) => "uri" in o,
+    postComment: (o) => "replyingToId" in o,
+    message: (o) => "roomId" in o && "userId" in o && "content" in o,
+    room: (o) => "participants" in o || "participant" in o || "isPrivate" in o,
+    following: (o) => "followingUserId" in o,
+    roomParticipant: (o) =>
+      "privateOtherUser" in o ||
+      "isChatAccepted" in o ||
+      ("roomId" in o && ("userId" in o || "user" in o)) ||
+      "isBanned" in o ||
+      "isModerator" in o ||
+      "isAdministrator" in o,
+  },
 });
 
+// store.mutate({"contentRating": "SFK", "id": 203, "profileImage": {id: 1, thumbnails: [{id: 2, __identify__: "thumbnail"}], __identify__: "image"}, "username": "abc"})
+// console.log(store.getState())
+// console.log(store.getReferences())
+
+// store.mutate({"contentRating": "SFK", "id": 203, "profileImage": null, "username": "abc"})
+// store.mutate({"id": 203, "images": [{id: 1, __identify__: "image"}], __identify__: "post"})
+// store.mutate({"id": 203, "images": null, __identify__: "post"})
+// console.log(store.getState())
+// console.log(store.getReferences())
+
+
+
+export type From =
+  | "user"
+  | "post"
+  | "image"
+  | "thumbnail"
+  | "postComment"
+  | "room"
+  | "roomParticipant"
+  | "message";
+
+
+// /**
+//  * Example data
+//  */
+// const posts = [...anArrayOfPostObjects]
+
+// // A helper function for the documentation.
+// // Don't write tests like this, use jest or something else.
+// const isTrue = (message: string, value: boolean) => {
+//   if (!value) throw new Error(`Value was not true! - ${message}`);
+//   console.log(`[${String(value).toUpperCase()}] ${message}`)
+// }
+
+// const user = createRelationalObject("user")
+// const image = createRelationalObject("image")
+// const thumbnail = createRelationalObject("thumbnail")
+// const post = createRelationalObject("post")
+
+// const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) => a.id > b.id ? -1 : 1)
+
+// post.hasOne(user)
+// post.hasMany(image, "images")
+
+// user.hasMany(post, "posts")
+// user.hasOne(image, "profileImage")
+// image.hasMany(thumbnail, "thumbnails")
+
+// const store = createStore({
+//   relationalCreators: [
+//     user,
+//     image,
+//     thumbnail,
+//     post,
+//   ],
+//   indexes: [homeFeed],
+//   identifier: {
+//     user: o => "username" in o,
+//     post: o => "caption" in o,
+//     image: o => "aspectRatio" in o,
+//     thumbnail: o => "uri" in o,
+//   }
+// });
+
+
+// console.log("\n\n1. UPSERT DATA INTO THE STORE\n")
+
+// /**
+//  * Upsert one object in the store
+//  */
+// store.mutate(posts[0])
+// isTrue("One object upserted", Object.keys(store.getState().post).length === 1)
 
-console.log("\n\n1. UPSERT DATA INTO THE STORE\n")
 
-/**
- * Upsert one object in the store
- */
-store.mutate(posts[0])
-isTrue("One object upserted", Object.keys(store.getState().post).length === 1)
+// /**
+//  * Upsert many objects in the store
+//  */
+// store.mutate(posts)
+// isTrue("Many object upserted", Object.keys(store.getState().post).length === 5)
 
+
+// /**
+//  * Upsert an object and manually determine the type
+//  */
+// try { store.mutate({ id: 11 }) }
+// catch (error: any) {
+//   // Because this post does not contain a "caption" field, the identifier
+//   // will fail to identify the object
+//   isTrue("Cannot identify the object", error.message === 'Identifier was not able to identify this object {"id":11}')
+// }
 
-/**
- * Upsert many objects in the store
- */
-store.mutate(posts)
-isTrue("Many object upserted", Object.keys(store.getState().post).length === 5)
+// // If identifier cannot determine the type of the object, 
+// // you can manually specify the type like this
+// store.mutate({ id: 11, __identify__: "post" })
+// isTrue("Used __identify__ to determine the type of the object", Object.keys(store.getState().post).length === 6)
 
+
+// // You can also use withOptions()
+// store.mutate(withOptions({ id: 11 }, { __identify__: "post" }))
+// isTrue("Used withOptions() to determine the type of the object", Object.keys(store.getState().post).length === 6)
 
-/**
- * Upsert an object and manually determine the type
- */
-try { store.mutate({ id: 11 }) }
-catch (error: any) {
-  // Because this post does not contain a "caption" field, the identifier
-  // will fail to identify the object
-  isTrue("Cannot identify the object", error.message === 'Identifier was not able to identify this object {"id":11}')
-}
 
-// If identifier cannot determine the type of the object, 
-// you can manually specify the type like this
-store.mutate({ id: 11, __identify__: "post" })
-isTrue("Used __identify__ to determine the type of the object", Object.keys(store.getState().post).length === 6)
+// // withOptions() also accepts a callback on all options,
+// // you can use the callback to check the object
+// store.mutate(withOptions({ id: 11 }, { __identify__: o => { if (o.id === 11) { return "post" } throw new Error("Should never come here"); } }))
+// isTrue("Used withOptions() callback to determine the type of the object", Object.keys(store.getState().post).length === 6)
 
 
-// You can also use withOptions()
-store.mutate(withOptions({ id: 11 }, { __identify__: "post" }))
-isTrue("Used withOptions() to determine the type of the object", Object.keys(store.getState().post).length === 6)
+// // You can also use withOptions() to identify an array of objects
+// store.mutate(withOptions([{ id: 11 }, { id: 12 }], { __identify__: "post" }))
+// isTrue("Used withOptions() to determine the type of an array of objects", Object.keys(store.getState().post).length === 7)
 
 
-// withOptions() also accepts a callback on all options,
-// you can use the callback to check the object
-store.mutate(withOptions({ id: 11 }, { __identify__: o => { if (o.id === 11) { return "post" } throw new Error("Should never come here"); } }))
-isTrue("Used withOptions() callback to determine the type of the object", Object.keys(store.getState().post).length === 6)
+// // withOptions() also accepts a callback on all options,
+// // you can use the callback to check all the objects
+// try {
+//   store.mutate(withOptions([{ id: 11 }, { id: 12 }], { __identify__: o => { if (o.id === 11) { return "post" } throw new Error(`id ${o.id}`); } }))
+// } catch (error: any) {
+//   isTrue("Expect id 12 to not be identified.", error.message === "id 12")
+// }
 
 
-// You can also use withOptions() to identify an array of objects
-store.mutate(withOptions([{ id: 11 }, { id: 12 }], { __identify__: "post" }))
-isTrue("Used withOptions() to determine the type of an array of objects", Object.keys(store.getState().post).length === 7)
+// /**
+//  * So far we've seen a few ways to upsert data
+//  *
+//  * store.mutate({...someObject})
+//  *
+//  * store.mutate([ {...someObject}, {...someOtherObject} ])
+//  *
+//  * store.mutate({...someObject, __identify__: "post" })
+//  *
+//  * store.mutate(withOptions({...someObject}, { __identify__: "post" } ))
+//  */
 
+// console.log("\nEND OF UPSERT DEMO\n")
 
-// withOptions() also accepts a callback on all options,
-// you can use the callback to check all the objects
-try {
-  store.mutate(withOptions([{ id: 11 }, { id: 12 }], { __identify__: o => { if (o.id === 11) { return "post" } throw new Error(`id ${o.id}`); } }))
-} catch (error: any) {
-  isTrue("Expect id 12 to not be identified.", error.message === "id 12")
-}
+
+// console.log("\n\n2. DELETE DATA FROM THE STORE\n")
 
+// /**
+//  * Deleting an object from the store is the same as upsert
+//  * Except, there's one small difference
+//  */
+// isTrue("Post 12 exists", !!store.getState().post[12])
+
+// store.mutate({ id: 12, __identify__: "post", __destroy__: true })
+
+// isTrue("Post 12 does not exist", !store.getState().post[12])
+
+
+// /**
+//  * To delete an object, just pass __destroy__ as true
+//  *
+//  * This can be done on an array or a single object. You can also use withOptions()
+//  *
+//  * Note: All orphaned children and references to the object will be removed.
+//  */
+
+// /**
+//  * All references are gone.
+//  */
+// isTrue("Profile image 52 exists on user 1", store.getState().user[1].profileImage === 52)
+
+// // Delete an image where the id is 52
+// // Destroy can be done on an array or a single object. You can also use withOptions()
+// store.mutate({ id: 52, __identify__: "image", __destroy__: true })
+
+// isTrue("Profile image 52 does not exist on user 1", store.getState().user[1].profileImage === undefined)
+
+
+
+// /**
+//  * All orphaned children are gone
+//  */
+
+// isTrue("User 2 has posts 10, 9, 6", JSON.stringify(store.getState().user[2].posts) === "[10,9,6]")
+// isTrue("Post 10, 9, 6 all exist", !!store.getState().post[10] && !!store.getState().post[9] && !!store.getState().post[6])
+// // Deleted user where id is 2
+// // Destroy can be done on an array or a single object. You can also use withOptions()
+// store.mutate(withOptions([{ id: 2 }], { __identify__: "user", __destroy__: true }))
+// isTrue("User 2 is deleted", !store.getState().user[2])
+// isTrue("Post 10, 9, 6 all deleted", !store.getState().post[10] && !store.getState().post[9] && !store.getState().post[6])
+
+
+
+// /**
+//  * So we've seen that we can delete data from the store and all references and orphaned children are deleted as well.
+//  * 
+//  * If you do not want this behaviour, you'll have to do a soft delete by using a key in you object like "isDeleted". You will
+//  * handle it manually (if isDeleted hide) or something like that.
+//  * 
+//  * Destroy can be done on an array or a single object. You can also use withOptions()
+//  * 
+//  */
+
+// console.log("\nEND OF DELETE DEMO\n")
+
+
+// console.log("\n\n3. SELECT DATA FROM THE STORE\n")
+
+// // Upsert posts again so that we have data to work with
+// store.mutate(posts)
+
+// /**
+//  * This is how you select data
+//  * 
+//  * store.select()
+//  */
+// const result = store.select({
+
+//   // Name of the object you want to select
+//   from: "image",
+
+//   /**
+//    * Fields, can be "*" for all fields OR an array like ["id", "users", "thumbnail"]
+//    * 
+//    * fields: "*"
+//    * fields: ["id", "users", "thumbnail"]
+//    * 
+//    * If you don't type the function, you may need to add @ts-ignore
+//    */
+//   // @ts-ignore
+//   // fields: ["id", "users", "thumbnails"],
+//   fields: "*",
+
+//   /**
+//    * The where clause,
+//    * can be an object, and array of object or a function.
+//    * Using the primaryKey of the object will be faster than using other properties.
+//    * 
+//    * where: {id: 48}                    // Will return an object or null
+//    * where: [ {id: 48}, {id: 49} ]      // Will return an array of matching objects or an empty array
+//    * where o => [48, 49].includes(o.id) // Will return an array of matching objects or an empty array
+//    * where: { aspectRatio: 0.777344 },  // Will return an array of matching objects or an empty array
+//    * 
+//    */
+//   where: { aspectRatio: 0.777344 },
+
+//   /**
+//    * Join operation,
+//    * if you don't use a join, any objects referenced in the selected object will be the primaryKey
+//    * If you want the object instead of the primaryKey, join!
+//    * 
+//    * Depending on the structure of you object, you need to build you join.
+//    */
+//   join: [
+//     {
+//       on: "thumbnails",
+//       fields: ["id"]
+//     }
+//   ],
+// })
+
+// // We have a result here.
+// // console.log(result)
+// isTrue("Result is the object we expected", JSON.stringify(result) === '[{"id":48,"aspectRatio":0.777344,"thumbnails":[{"id":186},{"id":187}]}]')
+
+
+// /**
+//  * 
+//  * Note: The result from store.select() is memonized
+//  * 
+//  * It will change only if the object changes or the select statement changes
+//  * 
+//  */
+
+// console.log("\nEND OF SELECT DEMO\n")
+
+
+// /**
+//  * So far we have:
+//  * 1. Upsert one object into the store
+//  * 2. Upserted many objects into the store
+//  * 3. Delete one and many objects and all references and orphaned children
+//  * 4. Selected one object and an array of objects
+//  */
+
+
+
+// console.log("\n\n4. SELECT DATA FROM INDEX\n")
+
+// /**
+//  * While the above ability to upsert, select and delete covers most cases,
+//  * sometimes the order in which the data was received is important.
+//  * 
+//  * Like in a feed where you can scroll down infinitely.
+//  * 
+//  * For this, example, we have "homeFeed" index
+//  * 
+//  * const homeFeed = createRelationalObjectIndex("homeFeed", [post])
+//  * 
+//  * We named it "homeFeed" and said that it contains post objects. You can pass multiple objects to to an index,
+//  * like this for example
+//  * 
+//  * Here we are saying homeFeed contains posts, articles and newsArticles.
+//  * const homeFeed = createRelationalObjectIndex("homeFeed", [post, article, newsArticle])
+//  * 
+//  * In this example, we will use only one type of object in the index, "post".
+//  * 
+//  * The index behaves very similar to a regular select and upsert, there are only a few differences
+//  */
+
+// // Upsert data
+// // Here we used withOptions() to upsert and array of posts to the store, and we
+// // Also mentioned an index as an array or a single index
+// // store.mutate(withOptions(posts, { __indexes__: ["homeFeed-home", "otherFeed-1"] }))
+// store.mutate(withOptions(posts, { __indexes__: "homeFeed-home" }))
+
+// /**
+//  * 
+//  * An indexKey is broken into two parts
+//  * "homeFeed" - which is the name of the index
+//  * "home" - which is a unique key
+//  * 
+//  * They are seperated by "-"
+//  * 
+//  * This is because if you have an index called "comments", you want seperate indexes for them.
+//  * Example comments page for post id 1, 2, 3
+//  * All have different comments
+//  * 
+//  * So the index will be something like this for example
+//  * By providing different unique keys, "comments" will create new indexes for each of them.
+//  * "comments-postId1"
+//  * "comments-postId2"
+//  * "comments-postId3"
+//  * 
+//  */
+
+// /**
+//  * The order of the index by default will be the order in which it was upserted,
+//  * However, when creating an index, you can pass a sorting function like so:~
+//  * 
+//  * const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) => a.id > b.id ? -1 : 1)
+//  */
+
+// const selected = store.selectIndex("homeFeed-home", {
+
+//   /**
+//    * This select object is the same as the one above except,
+//    * The "where" can only be a function
+//    */
+//   post: {
+//     from: "post",
+//     fields: ["id"],
+//   },
+
+//   // If we had more than one object type in this index
+//   // article: { from: "article", fields: ["id"] }
+// })
+
+// isTrue("Result is the an array containg posts, in the order it was upserted.", JSON.stringify(selected) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6}]')
+
+// // Here we upsert another post with ID of 5
+// store.mutate(withOptions({ id: 5 }, { __indexes__: "homeFeed-home", __identify__: "post" }))
+
+// // We select the index again
+// const selected2 = store.selectIndex("homeFeed-home", { post: { from: "post", fields: ["id"] } })
+
+// isTrue("The additional post was added to the index.", JSON.stringify(selected2) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6},{"id":5}]')
+
+// console.log("\nEND OF SELECT INDEX DEMO\n")
+
+// /**
+//  * If we want to remove the object from an index without destroying it, it can be done using __removeFromIndexes__
+//  */
+
+// // Here we upsert post with ID of 5, and remove it from the homeFeed-home index
+// // Upsert with and update the current object if needed.
+// store.mutate(withOptions({ id: 5, content: "Update fields if needed" }, { __removeFromIndexes__: "homeFeed-home", __identify__: "post" }))
+
+// // @ts-ignore
+// const result1 = store.select({ from: "post", fields: ["id", "content"], where: { id: 5 } })
+
+// // @ts-ignore
+// const selected3 = store.selectIndex("homeFeed-home", { post: { from: "post", fields: ["id"] } })
+// isTrue("The post was removed from the index.", JSON.stringify(selected3) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6}]')
+
+// // @ts-ignore
+// isTrue("The content in the post was updated.", result1.content === 'Update fields if needed')
+
+
+// /**
+//  * Save state to storage.
+//  * Restore state from storage.
+//  */
+// const storage: { myData: any } = {
+//   myData: {}
+// };
+
+// store.save(data => {
+//   // Save the data to storage.
+//   storage.myData = data;
+// })
+
+// // You can get the data from storage and restore it.
+// store.restore(storage.myData)
+
+
+// store.mutate(posts);
+
+// // const getUser = () => store.select<any, any>({
+// //   from: "user",
+// //   fields: ["id", "posts"],
+// //   where: { id: 1 },
+// //   join: [{ on: "posts", fields: ["id"] }]
+// // })
+
+// // const getPost = () => store.select<any, any>({
+// //   from: "post",
+// //   fields: ["id", "user"],
+// //   where: { id: 7 },
+// // })
+
+// // console.log("User Before", getUser())
+
+// // console.log(store.getReferences())
+// // store.mutate({
+// //   id: 1,
+// //   __identify__: "user",
+// //   posts: [8]
+// // });
+// // console.log(store.getReferences())
+
+// // console.log("User After", getUser())
+// // console.log("User After", getPost())
+
+
+// // const getPost = () => store.select<any, any>({
+// //   from: "post",
+// //   fields: ["id", "user"],
+// //   where: { id: 7 },
+// // })
+
+// // console.log("Post Before", getPost())
+
+// // store.mutate({
+// //   id: 7,
+// //   __identify__: "post",
+// //   user: null
+// // });
+
+// // console.log("Post After", getPost())
+// // console.log("User After", store.select<any, any>({
+// //   from: "user",
+// //   fields: ["id", "posts"],
+// //   where: { id: 1 },
+// // }))
+// // console.log(store.getReferences()["user"][1])
+// // console.log(store.getReferences()["post"])
 
-/**
- * So far we've seen a few ways to upsert data
- *
- * store.mutate({...someObject})
- *
- * store.mutate([ {...someObject}, {...someOtherObject} ])
- *
- * store.mutate({...someObject, __identify__: "post" })
- *
- * store.mutate(withOptions({...someObject}, { __identify__: "post" } ))
- */
-
-console.log("\nEND OF UPSERT DEMO\n")
-
-
-console.log("\n\n2. DELETE DATA FROM THE STORE\n")
-
-/**
- * Deleting an object from the store is the same as upsert
- * Except, there's one small difference
- */
-isTrue("Post 12 exists", !!store.getState().post[12])
-
-store.mutate({ id: 12, __identify__: "post", __destroy__: true })
-
-isTrue("Post 12 does not exist", !store.getState().post[12])
-
-
-/**
- * To delete an object, just pass __destroy__ as true
- *
- * This can be done on an array or a single object. You can also use withOptions()
- *
- * Note: All orphaned children and references to the object will be removed.
- */
-
-/**
- * All references are gone.
- */
-isTrue("Profile image 52 exists on user 1", store.getState().user[1].profileImage === 52)
-
-// Delete an image where the id is 52
-// Destroy can be done on an array or a single object. You can also use withOptions()
-store.mutate({ id: 52, __identify__: "image", __destroy__: true })
-
-isTrue("Profile image 52 does not exist on user 1", store.getState().user[1].profileImage === undefined)
-
-
-
-/**
- * All orphaned children are gone
- */
-
-isTrue("User 2 has posts 10, 9, 6", JSON.stringify(store.getState().user[2].posts) === "[10,9,6]")
-isTrue("Post 10, 9, 6 all exist", !!store.getState().post[10] && !!store.getState().post[9] && !!store.getState().post[6])
-// Deleted user where id is 2
-// Destroy can be done on an array or a single object. You can also use withOptions()
-store.mutate(withOptions([{ id: 2 }], { __identify__: "user", __destroy__: true }))
-isTrue("User 2 is deleted", !store.getState().user[2])
-isTrue("Post 10, 9, 6 all deleted", !store.getState().post[10] && !store.getState().post[9] && !store.getState().post[6])
-
-
-
-/**
- * So we've seen that we can delete data from the store and all references and orphaned children are deleted as well.
- * 
- * If you do not want this behaviour, you'll have to do a soft delete by using a key in you object like "isDeleted". You will
- * handle it manually (if isDeleted hide) or something like that.
- * 
- * Destroy can be done on an array or a single object. You can also use withOptions()
- * 
- */
-
-console.log("\nEND OF DELETE DEMO\n")
-
-
-console.log("\n\n3. SELECT DATA FROM THE STORE\n")
-
-// Upsert posts again so that we have data to work with
-store.mutate(posts)
-
-/**
- * This is how you select data
- * 
- * store.select()
- */
-const result = store.select({
-
-  // Name of the object you want to select
-  from: "image",
-
-  /**
-   * Fields, can be "*" for all fields OR an array like ["id", "users", "thumbnail"]
-   * 
-   * fields: "*"
-   * fields: ["id", "users", "thumbnail"]
-   * 
-   * If you don't type the function, you may need to add @ts-ignore
-   */
-  // @ts-ignore
-  // fields: ["id", "users", "thumbnails"],
-  fields: "*",
-
-  /**
-   * The where clause,
-   * can be an object, and array of object or a function.
-   * Using the primaryKey of the object will be faster than using other properties.
-   * 
-   * where: {id: 48}                    // Will return an object or null
-   * where: [ {id: 48}, {id: 49} ]      // Will return an array of matching objects or an empty array
-   * where o => [48, 49].includes(o.id) // Will return an array of matching objects or an empty array
-   * where: { aspectRatio: 0.777344 },  // Will return an array of matching objects or an empty array
-   * 
-   */
-  where: { aspectRatio: 0.777344 },
-
-  /**
-   * Join operation,
-   * if you don't use a join, any objects referenced in the selected object will be the primaryKey
-   * If you want the object instead of the primaryKey, join!
-   * 
-   * Depending on the structure of you object, you need to build you join.
-   */
-  join: [
-    {
-      on: "thumbnails",
-      fields: ["id"]
-    }
-  ],
-})
-
-// We have a result here.
-// console.log(result)
-isTrue("Result is the object we expected", JSON.stringify(result) === '[{"id":48,"aspectRatio":0.777344,"thumbnails":[{"id":186},{"id":187}]}]')
-
-
-/**
- * 
- * Note: The result from store.select() is memonized
- * 
- * It will change only if the object changes or the select statement changes
- * 
- */
-
-console.log("\nEND OF SELECT DEMO\n")
-
-
-/**
- * So far we have:
- * 1. Upsert one object into the store
- * 2. Upserted many objects into the store
- * 3. Delete one and many objects and all references and orphaned children
- * 4. Selected one object and an array of objects
- */
-
-
-
-console.log("\n\n4. SELECT DATA FROM INDEX\n")
-
-/**
- * While the above ability to upsert, select and delete covers most cases,
- * sometimes the order in which the data was received is important.
- * 
- * Like in a feed where you can scroll down infinitely.
- * 
- * For this, example, we have "homeFeed" index
- * 
- * const homeFeed = createRelationalObjectIndex("homeFeed", [post])
- * 
- * We named it "homeFeed" and said that it contains post objects. You can pass multiple objects to to an index,
- * like this for example
- * 
- * Here we are saying homeFeed contains posts, articles and newsArticles.
- * const homeFeed = createRelationalObjectIndex("homeFeed", [post, article, newsArticle])
- * 
- * In this example, we will use only one type of object in the index, "post".
- * 
- * The index behaves very similar to a regular select and upsert, there are only a few differences
- */
-
-// Upsert data
-// Here we used withOptions() to upsert and array of posts to the store, and we
-// Also mentioned an index as an array or a single index
-// store.mutate(withOptions(posts, { __indexes__: ["homeFeed-home", "otherFeed-1"] }))
-store.mutate(withOptions(posts, { __indexes__: "homeFeed-home" }))
-
-/**
- * 
- * An indexKey is broken into two parts
- * "homeFeed" - which is the name of the index
- * "home" - which is a unique key
- * 
- * They are seperated by "-"
- * 
- * This is because if you have an index called "comments", you want seperate indexes for them.
- * Example comments page for post id 1, 2, 3
- * All have different comments
- * 
- * So the index will be something like this for example
- * By providing different unique keys, "comments" will create new indexes for each of them.
- * "comments-postId1"
- * "comments-postId2"
- * "comments-postId3"
- * 
- */
-
-/**
- * The order of the index by default will be the order in which it was upserted,
- * However, when creating an index, you can pass a sorting function like so:~
- * 
- * const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) => a.id > b.id ? -1 : 1)
- */
-
-const selected = store.selectIndex("homeFeed-home", {
-
-  /**
-   * This select object is the same as the one above except,
-   * The "where" can only be a function
-   */
-  post: {
-    from: "post",
-    fields: ["id"],
-  },
-
-  // If we had more than one object type in this index
-  // article: { from: "article", fields: ["id"] }
-})
-
-isTrue("Result is the an array containg posts, in the order it was upserted.", JSON.stringify(selected) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6}]')
-
-// Here we upsert another post with ID of 5
-store.mutate(withOptions({ id: 5 }, { __indexes__: "homeFeed-home", __identify__: "post" }))
-
-// We select the index again
-const selected2 = store.selectIndex("homeFeed-home", { post: { from: "post", fields: ["id"] } })
-
-isTrue("The additional post was added to the index.", JSON.stringify(selected2) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6},{"id":5}]')
-
-console.log("\nEND OF SELECT INDEX DEMO\n")
-
-/**
- * If we want to remove the object from an index without destroying it, it can be done using __removeFromIndexes__
- */
-
-// Here we upsert post with ID of 5, and remove it from the homeFeed-home index
-// Upsert with and update the current object if needed.
-store.mutate(withOptions({ id: 5, content: "Update fields if needed" }, { __removeFromIndexes__: "homeFeed-home", __identify__: "post" }))
-
-// @ts-ignore
-const result1 = store.select({ from: "post", fields: ["id", "content"], where: { id: 5 } })
-
-// @ts-ignore
-const selected3 = store.selectIndex("homeFeed-home", { post: { from: "post", fields: ["id"] } })
-isTrue("The post was removed from the index.", JSON.stringify(selected3) === '[{"id":10},{"id":9},{"id":8},{"id":7},{"id":6}]')
-
-// @ts-ignore
-isTrue("The content in the post was updated.", result1.content === 'Update fields if needed')
-
-
-/**
- * Save state to storage.
- * Restore state from storage.
- */
-const storage: { myData: any } = {
-  myData: {}
-};
-
-store.save(data => {
-  // Save the data to storage.
-  storage.myData = data;
-})
-
-// You can get the data from storage and restore it.
-store.restore(storage.myData)
-
-
-store.mutate(posts);
 
 // const getUser = () => store.select<any, any>({
 //   from: "user",
 //   fields: ["id", "posts"],
 //   where: { id: 1 },
-//   join: [{ on: "posts", fields: ["id"] }]
 // })
 
-// const getPost = () => store.select<any, any>({
-//   from: "post",
-//   fields: ["id", "user"],
-//   where: { id: 7 },
-// })
+// console.log("Before", getUser())
 
-// console.log("User Before", getUser())
-
-// console.log(store.getReferences())
 // store.mutate({
 //   id: 1,
 //   __identify__: "user",
 //   posts: [8]
 // });
-// console.log(store.getReferences())
 
 // console.log("User After", getUser())
-// console.log("User After", getPost())
-
-
-// const getPost = () => store.select<any, any>({
+// console.log("Post After", store.select<any, any>({
 //   from: "post",
 //   fields: ["id", "user"],
-//   where: { id: 7 },
-// })
-
-// console.log("Post Before", getPost())
-
-// store.mutate({
-//   id: 7,
-//   __identify__: "post",
-//   user: null
-// });
-
-// console.log("Post After", getPost())
-// console.log("User After", store.select<any, any>({
-//   from: "user",
-//   fields: ["id", "posts"],
-//   where: { id: 1 },
+//   where: { id: 8 },
 // }))
 // console.log(store.getReferences()["user"][1])
 // console.log(store.getReferences()["post"])
-
-
-const getUser = () => store.select<any, any>({
-  from: "user",
-  fields: ["id", "posts"],
-  where: { id: 1 },
-})
-
-console.log("Before", getUser())
-
-store.mutate({
-  id: 1,
-  __identify__: "user",
-  posts: [8]
-});
-
-console.log("User After", getUser())
-console.log("Post After", store.select<any, any>({
-  from: "post",
-  fields: ["id", "user"],
-  where: { id: 8 },
-}))
-console.log(store.getReferences()["user"][1])
-console.log(store.getReferences()["post"])

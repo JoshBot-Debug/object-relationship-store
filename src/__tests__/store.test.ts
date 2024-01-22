@@ -105,7 +105,7 @@ test("upsertWhere", () => {
     return {id: 54, thumbnails: [206]}
   })
 
-  expect(store1.getReferences().thumbnail[207].length).toBe(0)
+  expect(store1.getReferences().thumbnail[207]).toBe(undefined)
   expect(store1.getState().image[54].thumbnails.length).toBe(1)
 })
 
