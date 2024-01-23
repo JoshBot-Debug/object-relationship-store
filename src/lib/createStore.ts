@@ -427,63 +427,36 @@ export function createStore<
        */
       function cleanReferences(
         ref: `${string}.${string}.${string}`,
-        targetPk: string
+        targetPk?: string
       ) {
+        if (!targetPk) return;
+
         const [tableName, id, field] = ref.split(".");
 
         // @ts-ignore
         const fieldRelationalObject = model[
           tableName
         ] as ORS.RelationalObject<N>;
+
         const fieldRelationship = fieldRelationalObject.__relationship[field];
 
-        // @ts-ignore
-        const targetRelationalObject = model[
-          fieldRelationship.__name
-        ] as ORS.RelationalObject<N>;
-
-        const allTargetFieldRelationships = Object.values(
-          targetRelationalObject.__relationship
-        );
-
-        const fieldObject = state?.[fieldRelationship.__name]?.[targetPk];
-
-        if (!fieldObject) return;
-
-        for (let i = 0; i < allTargetFieldRelationships.length; i++) {
-          const targetFieldRelations = allTargetFieldRelationships[i];
-
-          const target = fieldObject[targetFieldRelations.__alias];
-
-          if (!target) continue;
-
-          if (targetFieldRelations.__has === "hasMany") {
-            for (let j = 0; j < target.length; j++) {
-              cleanReferences(
-                `${fieldRelationship.__name}.${
-                  fieldObject[targetRelationalObject.__primaryKey]
-                }.${targetFieldRelations.__alias}`,
-                target[j]
-              );
-            }
-            continue;
-          }
-
-          cleanReferences(
-            `${fieldRelationship.__name}.${
-              fieldObject[targetRelationalObject.__primaryKey]
-            }.${targetFieldRelations.__alias}`,
-            target
-          );
-        }
-
-        delete state[fieldRelationship.__name][targetPk];
-        delete state[tableName][id][field];
+        // Delete the reference and its field in state
         references.remove({
           name: fieldRelationship.__name,
           primaryKey: targetPk,
           ref,
         });
+
+        // If it's a one to one, delete it
+        if (fieldRelationship.__has === "hasOne")
+          delete state[tableName][id][field];
+
+        // If it's a one to many, delete only the one we're removing
+        if (fieldRelationship.__has === "hasMany") {
+          state[tableName][id][field] = state[tableName][id][field].filter(
+            (pk: string) => pk !== targetPk
+          );
+        }
       }
 
       /**
@@ -548,7 +521,6 @@ export function createStore<
 
           // hasMany and all the items are foreignKeys
           if (item[field].every((i: any) => typeof i !== "object")) {
-            // const relationName = fieldRelationship.__name;
             const itemPrimaryKey = item[primaryKey];
             const items = state[name][itemPrimaryKey][field];
             const next = [];
