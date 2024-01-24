@@ -349,9 +349,9 @@ export function createStore<
       const primaryKey = relationalObject.__primaryKey;
 
       // If the primary key does not exist on the object, we can't go forward.
-      if (!item[primaryKey])
+      if (item[primaryKey] === undefined || item[primaryKey] === null)
         throw new Error(
-          `Expected object "${name}" to have a primaryKey "${primaryKey}".`
+          `Expected object "${name}" to have a primaryKey "${primaryKey}". Value received ${primaryKey}:${item[primaryKey]}`
         );
 
       if ("__destroy__" in item) {
@@ -453,9 +453,11 @@ export function createStore<
 
         // If it's a one to many, delete only the one we're removing
         if (fieldRelationship.__has === "hasMany") {
-          state[tableName][id][field] = state[tableName][id][field].filter(
+          const next = state[tableName][id][field].filter(
             (pk: string) => pk !== targetPk
           );
+          if (next.length > 0) state[tableName][id][field] = next;
+          else delete state[tableName][id][field];
         }
       }
 

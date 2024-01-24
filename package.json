@@ -14,7 +14,7 @@
     "url": "https://github.com/JoshBot-Debug/object-relationship-store.git"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --watchAll",
     "index": "nodemon src/index.ts",
     "build": "rm -r ./build & rm jjmyers-object-relationship-*.tgz & rollup -c --bundleConfigAsCjs && npm pack"
   },
