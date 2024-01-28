@@ -147,6 +147,8 @@ export function createStore<
 
           // If we have references
           if (refs) {
+
+
             // Check if all are self refs
             const allSelfRef = refs.every((ref) => {
               const [refName, refPrimaryKey] = ref.split(".");
@@ -154,8 +156,26 @@ export function createStore<
                 refName === name && refPrimaryKey === String(item[primaryKey])
               );
             });
+            
 
-            if (!allSelfRef) return;
+            for (let i = 0; i < refs.length; i++) {
+              const [refName, refPrimaryKey] = refs[i].split(".");
+              
+            }
+
+            if (!allSelfRef) {
+              for (let i = 0; i < refs.length; i++) {
+                const [refName, refPrimaryKey, refField] = refs[i].split(".");
+                if (refName === name) {
+                  cleanReferences(
+                    `${refName}.${refPrimaryKey}.${refField}`,
+                    itemPrimaryKey
+                  );
+                }
+              }
+
+              return;
+            }
 
             // If we are going to destroy this related object, check it for orphaned children and remove them too.
             // recursively
@@ -244,6 +264,45 @@ export function createStore<
        * If there were references, after removing them, destroy the object and all orphans
        */
       destroyOrphans({ item, name, primaryKey });
+    }
+
+    /**
+     * Will remove all references
+     * @param ref The reference we want to clean
+     * @param targetPk The target pk.
+     */
+    function cleanReferences(
+      ref: `${string}.${string}.${string}`,
+      targetPk?: string
+    ) {
+      if (!targetPk) return;
+
+      const [tableName, id, field] = ref.split(".");
+
+      // @ts-ignore
+      const fieldRelationalObject = model[tableName] as ORS.RelationalObject<N>;
+
+      const fieldRelationship = fieldRelationalObject.__relationship[field];
+
+      // Delete the reference and its field in state
+      references.remove({
+        name: fieldRelationship.__name,
+        primaryKey: targetPk,
+        ref,
+      });
+
+      // If it's a one to one, delete it
+      if (fieldRelationship.__has === "hasOne")
+        delete state[tableName][id][field];
+
+      // If it's a one to many, delete only the one we're removing
+      if (fieldRelationship.__has === "hasMany") {
+        const next = state[tableName][id][field].filter(
+          (pk: string) => pk !== targetPk
+        );
+        if (next.length > 0) state[tableName][id][field] = next;
+        else delete state[tableName][id][field];
+      }
     }
 
     /**
@@ -356,9 +415,10 @@ export function createStore<
 
       if ("__destroy__" in item) {
         // If we are destroying this item and all references, call destroyReferences and return
-        if (item.__destroy__)
+        if (item.__destroy__) {
+          delete item.__destroy__;
           return destroyReferences({ item, name, primaryKey });
-        delete item.__destroy__;
+        }
       }
 
       // If this table does not exist, initialize it.
@@ -418,47 +478,6 @@ export function createStore<
         });
 
         delete item.__removeFromIndexes__;
-      }
-
-      /**
-       * Will remove all references
-       * @param ref The reference we want to clean
-       * @param targetPk The target pk.
-       */
-      function cleanReferences(
-        ref: `${string}.${string}.${string}`,
-        targetPk?: string
-      ) {
-        if (!targetPk) return;
-
-        const [tableName, id, field] = ref.split(".");
-
-        // @ts-ignore
-        const fieldRelationalObject = model[
-          tableName
-        ] as ORS.RelationalObject<N>;
-
-        const fieldRelationship = fieldRelationalObject.__relationship[field];
-
-        // Delete the reference and its field in state
-        references.remove({
-          name: fieldRelationship.__name,
-          primaryKey: targetPk,
-          ref,
-        });
-
-        // If it's a one to one, delete it
-        if (fieldRelationship.__has === "hasOne")
-          delete state[tableName][id][field];
-
-        // If it's a one to many, delete only the one we're removing
-        if (fieldRelationship.__has === "hasMany") {
-          const next = state[tableName][id][field].filter(
-            (pk: string) => pk !== targetPk
-          );
-          if (next.length > 0) state[tableName][id][field] = next;
-          else delete state[tableName][id][field];
-        }
       }
 
       /**
