@@ -506,17 +506,20 @@ test("#A and #B references each other - #A, #B is deleted", () => {
   expect(store.getReferences()).toStrictEqual({ b: {}, a: {} });
 });
 
-test("#A references many #B - #B1 is removed from #A", () => {
+test("#A references many #B, #C references #B1 - #B1 is removed from #A", () => {
   const a = createRelationalObject("a");
   const b = createRelationalObject("b");
+  const c = createRelationalObject("c");
 
+  c.hasOne(b);
   a.hasMany(b, "bs");
 
   const store = createStore({
-    relationalCreators: [a, b],
+    relationalCreators: [a, b, c],
     identifier: {
       a: (o) => "isA" in o,
       b: (o) => "isB" in o,
+      c: (o) => "isC" in o,
     },
   });
 
@@ -536,15 +539,22 @@ test("#A references many #B - #B1 is removed from #A", () => {
     bs: [_b1, _b2],
   };
 
-  store.mutate(_a);
+  const _c = {
+    id: 4,
+    isC: true,
+    b: _b2,
+  };
+
+  store.mutate([_a, _c]);
 
   expect(store.getState()).toStrictEqual({
     a: { "1": { id: 1, isA: true, bs: [2, 3] } },
     b: { "2": { id: 2, isB: true }, "3": { id: 3, isB: true } },
+    c: { "4": { id: 4, isC: true, b: 3 } },
   });
 
   expect(store.getReferences()).toStrictEqual({
-    b: { "2": ["a.1.bs"], "3": ["a.1.bs"] },
+    b: { "2": ["a.1.bs"], "3": ["a.1.bs", "c.4.b"] },
   });
 
   store.mutate({
@@ -556,8 +566,141 @@ test("#A references many #B - #B1 is removed from #A", () => {
   expect(store.getState()).toStrictEqual({
     a: { "1": { id: 1, isA: true, bs: [2] } },
     b: { "2": { id: 2, isB: true }, "3": { id: 3, isB: true } },
+    c: { "4": { id: 4, isC: true, b: 3 } },
   });
-  expect(store.getReferences()).toStrictEqual({ b: { "2": ["a.1.bs"] } });
+  expect(store.getReferences()).toStrictEqual({
+    b: { "2": ["a.1.bs"], "3": ["c.4.b"] },
+  });
+});
+
+test("#A references many #B, #C references #B1 - #B1, #B1 is removed from #A by null", () => {
+  const a = createRelationalObject("a");
+  const b = createRelationalObject("b");
+  const c = createRelationalObject("c");
+
+  c.hasOne(b);
+  a.hasMany(b, "bs");
+
+  const store = createStore({
+    relationalCreators: [a, b, c],
+    identifier: {
+      a: (o) => "isA" in o,
+      b: (o) => "isB" in o,
+      c: (o) => "isC" in o,
+    },
+  });
+
+  const _b1 = {
+    id: 2,
+    isB: true,
+  };
+
+  const _b2 = {
+    id: 3,
+    isB: true,
+  };
+
+  const _a = {
+    id: 1,
+    isA: true,
+    bs: [_b1, _b2],
+  };
+
+  const _c = {
+    id: 4,
+    isC: true,
+    b: _b2,
+  };
+
+  store.mutate([_a, _c]);
+
+  expect(store.getState()).toStrictEqual({
+    a: { "1": { id: 1, isA: true, bs: [2, 3] } },
+    b: { "2": { id: 2, isB: true }, "3": { id: 3, isB: true } },
+    c: { "4": { id: 4, isC: true, b: 3 } },
+  });
+
+  expect(store.getReferences()).toStrictEqual({
+    b: { "2": ["a.1.bs"], "3": ["a.1.bs", "c.4.b"] },
+  });
+
+  store.mutate({
+    id: 1,
+    isA: true,
+    bs: null,
+  });
+
+  expect(store.getState()).toStrictEqual({
+    a: { "1": { id: 1, isA: true } },
+    b: { "2": { id: 2, isB: true }, "3": { id: 3, isB: true } },
+    c: { "4": { id: 4, isC: true, b: 3 } },
+  });
+  expect(store.getReferences()).toStrictEqual({ b: { "3": ["c.4.b"] } });
+});
+
+test("#A references many #B, #C references #B1 - #B1, #B1 is removed from #A by []", () => {
+  const a = createRelationalObject("a");
+  const b = createRelationalObject("b");
+  const c = createRelationalObject("c");
+
+  c.hasOne(b);
+  a.hasMany(b, "bs");
+
+  const store = createStore({
+    relationalCreators: [a, b, c],
+    identifier: {
+      a: (o) => "isA" in o,
+      b: (o) => "isB" in o,
+      c: (o) => "isC" in o,
+    },
+  });
+
+  const _b1 = {
+    id: 2,
+    isB: true,
+  };
+
+  const _b2 = {
+    id: 3,
+    isB: true,
+  };
+
+  const _a = {
+    id: 1,
+    isA: true,
+    bs: [_b1, _b2],
+  };
+
+  const _c = {
+    id: 4,
+    isC: true,
+    b: _b2,
+  };
+
+  store.mutate([_a, _c]);
+
+  expect(store.getState()).toStrictEqual({
+    a: { "1": { id: 1, isA: true, bs: [2, 3] } },
+    b: { "2": { id: 2, isB: true }, "3": { id: 3, isB: true } },
+    c: { "4": { id: 4, isC: true, b: 3 } },
+  });
+
+  expect(store.getReferences()).toStrictEqual({
+    b: { "2": ["a.1.bs"], "3": ["a.1.bs", "c.4.b"] },
+  });
+
+  store.mutate({
+    id: 1,
+    isA: true,
+    bs: [],
+  });
+
+  expect(store.getState()).toStrictEqual({
+    a: { "1": { id: 1, isA: true, bs: [] } },
+    b: { "2": { id: 2, isB: true }, "3": { id: 3, isB: true } },
+    c: { "4": { id: 4, isC: true, b: 3 } },
+  });
+  expect(store.getReferences()).toStrictEqual({ b: { "3": ["c.4.b"] } });
 });
 
 test("#A references many #B - #B1 is object is not received", () => {

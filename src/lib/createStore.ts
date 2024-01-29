@@ -147,8 +147,6 @@ export function createStore<
 
           // If we have references
           if (refs) {
-
-
             // Check if all are self refs
             const allSelfRef = refs.every((ref) => {
               const [refName, refPrimaryKey] = ref.split(".");
@@ -156,12 +154,6 @@ export function createStore<
                 refName === name && refPrimaryKey === String(item[primaryKey])
               );
             });
-            
-
-            for (let i = 0; i < refs.length; i++) {
-              const [refName, refPrimaryKey] = refs[i].split(".");
-              
-            }
 
             if (!allSelfRef) {
               for (let i = 0; i < refs.length; i++) {
@@ -549,8 +541,10 @@ export function createStore<
               const pk = items[i];
 
               if (!item[field].includes(pk)) {
-                const refs = references.current[fieldRelationship.__name]?.[pk];
-                refs.forEach((ref) => cleanReferences(ref, pk));
+                // We used to clean all references here, but that was wrong
+                // see test case #A references many #B, #C references #B1 - #B1 is removed from #A
+                // refs.forEach((ref) => cleanReferences(ref, pk));
+                cleanReferences(`${name}.${itemPrimaryKey}.${field}`, pk);
                 continue;
               }
               next.push(pk);
