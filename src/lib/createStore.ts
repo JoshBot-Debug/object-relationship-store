@@ -103,6 +103,7 @@ export function createStore<
        */
       Object.entries(itemSchema.__relationship).forEach(
         ([field, relationship]) => {
+          
           if (!state[name][item[primaryKey]]) return;
 
           const itemPrimaryKey = state[name][item[primaryKey]][field];
@@ -156,9 +157,11 @@ export function createStore<
             });
 
             if (!allSelfRef) {
+
               for (let i = 0; i < refs.length; i++) {
                 const [refName, refPrimaryKey, refField] = refs[i].split(".");
-                if (refName === name) {
+
+                if (refName === name && item[primaryKey] == refPrimaryKey) {
                   cleanReferences(
                     `${refName}.${refPrimaryKey}.${refField}`,
                     itemPrimaryKey

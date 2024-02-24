@@ -1669,3 +1669,61 @@ test("#A, #B ref #C - #A is deleted", () => {
     c: { "3": ["b.2.c"] },
   });
 });
+
+test("#A1, #A2 ref #B - #A1 is deleted", () => {
+  const a = createRelationalObject("a");
+  const b = createRelationalObject("b");
+
+  a.hasOne(b);
+
+  const store = createStore({
+    relationalCreators: [a, b],
+    identifier: {
+      a: (o) => "isA" in o,
+      b: (o) => "isB" in o,
+    },
+  });
+
+  const _b = {
+    id: 3,
+    isB: true,
+  };
+
+  const _a1 = {
+    id: 1,
+    b: _b,
+    isA: true,
+  };
+
+  const _a2 = {
+    id: 2,
+    b: _b,
+    isA: true,
+  };
+
+  store.mutate([_a1, _a2]);
+
+  expect(store.getState()).toStrictEqual({
+    a: { "1": { id: 1, isA: true, b: 3 }, "2": { id: 2, isA: true, b: 3 } },
+    b: { "3": { id: 3, isB: true } },
+  });
+
+  expect(store.getReferences()).toStrictEqual({
+    b: { "3": ["a.1.b", "a.2.b"] },
+  });
+
+  store.mutate({
+    id: 1,
+    isA: true,
+    __destroy__: true,
+  });
+
+  expect(store.getState()).toStrictEqual({
+    a: { "2": { id: 2, isA: true, b: 3 } },
+    b: { "3": { id: 3, isB: true } },
+  });
+
+  expect(store.getReferences()).toStrictEqual({
+    b: { "3": ["a.2.b"] },
+  });
+});
