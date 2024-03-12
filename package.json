@@ -1,6 +1,6 @@
 {
   "name": "@jjmyers/object-relationship-store",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "A javascript object relationship store.",
   "main": "build/index.js",
   "module": "build/index.esm.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/JoshBot-Debug/object-relationship-store.git"
+    "url": "git+https://github.com/JoshBot-Debug/object-relationship-store.git"
   },
   "scripts": {
     "test": "jest --watchAll",

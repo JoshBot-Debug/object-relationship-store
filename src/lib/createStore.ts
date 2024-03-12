@@ -33,13 +33,18 @@ export function createStore<
 
   const listeners = new Set<() => void>();
 
-  const model = relationalCreators.reduce((r, t) => {
-    const { hasOne, hasMany, ...next } = t;
-    return { ...r, [next.__name]: next };
-  }, {} as ORS.Model<N>);
+  const model: ORS.Model<N> = {};
 
-  // @ts-ignore
-  indexes?.forEach((index) => (model[index.__name] = index));
+  for (let i = 0; i < relationalCreators.length; i++) {
+    const { hasOne, hasMany, ...next } = relationalCreators[i];
+    // @ts-expect-error
+    model[next.__name] = next;
+  }
+
+  for (let i = 0; i < (indexes?.length ?? 0); i++) {
+    // @ts-expect-error
+    model[indexes![i].__name] = indexes![i];
+  }
 
   function subscribe(listener: () => void) {
     listeners.add(listener);
@@ -67,6 +72,25 @@ export function createStore<
     throw new Error(
       `Identifier was not able to identify this object ${JSON.stringify(item)}`
     );
+  }
+
+  /**
+   * Check if all are self refs
+   * @param name The name of the field
+   * @param pk The primary key value of the field
+   * @param refs All refs
+   * @returns {boolean}
+   */
+  function allSelfRef(
+    name: string,
+    pk: any,
+    refs: `${string}.${string}.${string}`[]
+  ): boolean {
+    for (let i = 0; i < refs.length; i++) {
+      const [refName, refPrimaryKey] = refs[i].split(".");
+      if (!(refName === name && refPrimaryKey === pk.toString())) return false;
+    }
+    return true;
   }
 
   function mutate(payload: ORS.StoreObject<N, I> | ORS.StoreObject<N, I>[]) {
@@ -101,103 +125,99 @@ export function createStore<
       /**
        * For each related field in this object, check if the objects related fields and remove orphan children.
        */
-      Object.entries(itemSchema.__relationship).forEach(
-        ([field, relationship]) => {
-          
-          if (!state[name][item[primaryKey]]) return;
+      const relationships = Object.entries(itemSchema.__relationship);
 
-          const itemPrimaryKey = state[name][item[primaryKey]][field];
+      for (let i = 0; i < relationships.length; i++) {
+        const [field, relationship] = relationships[i];
 
-          // If there is no primary key, skip
-          if (!itemPrimaryKey) return;
+        if (!state[name][item[primaryKey]]) continue;
 
-          // This field in the object is a "hasMany", loop over itemPrimaryKey, it is an array of primary keys.
-          if (relationship.__has === "hasMany") {
-            itemPrimaryKey.forEach((pk: any) => {
-              const refs = references.current[relationship.__name][pk];
+        const itemPrimaryKey = state[name][item[primaryKey]][field];
 
-              // For each pk, check if all are self refs
-              const allSelfRef = refs.every((ref) => {
-                const [refName, refPrimaryKey] = ref.split(".");
-                return (
-                  refName === name && refPrimaryKey === String(item[primaryKey])
-                );
-              });
+        // If there is no primary key, skip
+        if (!itemPrimaryKey) continue;
 
-              if (!allSelfRef) return;
+        // This field in the object is a "hasMany", loop over itemPrimaryKey, it is an array of primary keys.
+        if (relationship.__has === "hasMany") {
+          for (let k = 0; k < itemPrimaryKey.length; k++) {
+            const pk = itemPrimaryKey[k];
 
-              // If we are going to destroy this related object, check it for orphaned children and remove them too.
-              // recursively
+            // const refs = references.current[relationship.__name][pk];
 
-              destroyOrphans({
-                item: { [relationship.__primaryKey]: pk },
-                name: relationship.__name,
-                primaryKey: relationship.__primaryKey,
-              });
+            // TODO Check if this case is needed
+            // For each pk, check if all are self refs
+            // const allSelfRef = refs.every((ref) => {
+            //   const [refName, refPrimaryKey] = ref.split(".");
+            //   return (
+            //     refName === name && refPrimaryKey === String(item[primaryKey])
+            //   );
+            // });
 
-              // Finally,
-              // If all references are to the item we are deleting, remove all refs and delete the object too
-              delete references.current[relationship.__name][pk];
-              delete state[relationship.__name][pk];
-            });
-
-            return;
-          }
-
-          const refs = references.current[relationship.__name][itemPrimaryKey];
-
-          // If we have references
-          if (refs) {
-            // Check if all are self refs
-            const allSelfRef = refs.every((ref) => {
-              const [refName, refPrimaryKey] = ref.split(".");
-              return (
-                refName === name && refPrimaryKey === String(item[primaryKey])
-              );
-            });
-
-            if (!allSelfRef) {
-
-              for (let i = 0; i < refs.length; i++) {
-                const [refName, refPrimaryKey, refField] = refs[i].split(".");
-
-                if (refName === name && item[primaryKey] == refPrimaryKey) {
-                  cleanReferences(
-                    `${refName}.${refPrimaryKey}.${refField}`,
-                    itemPrimaryKey
-                  );
-                }
-              }
-
-              return;
-            }
+            // if (!allSelfRef) continue;
 
             // If we are going to destroy this related object, check it for orphaned children and remove them too.
             // recursively
+
             destroyOrphans({
-              item: { [relationship.__primaryKey]: itemPrimaryKey },
+              item: { [relationship.__primaryKey]: pk },
               name: relationship.__name,
               primaryKey: relationship.__primaryKey,
             });
 
+            // Finally,
             // If all references are to the item we are deleting, remove all refs and delete the object too
-            delete references.current[relationship.__name][itemPrimaryKey];
-            delete state[relationship.__name][itemPrimaryKey];
+            delete references.current[relationship.__name][pk];
+            delete state[relationship.__name][pk];
           }
+
+          continue;
         }
-      );
+
+        const refs = references.current[relationship.__name][itemPrimaryKey];
+
+        // If we have references
+        if (refs) {
+          // Check if all are self refs
+          if (!allSelfRef(name, item[primaryKey], refs)) {
+            for (let j = 0; j < refs.length; j++) {
+              const [refName, refPrimaryKey, refField] = refs[j].split(".");
+
+              if (refName === name && item[primaryKey] == refPrimaryKey) {
+                cleanReferences(
+                  `${refName}.${refPrimaryKey}.${refField}`,
+                  itemPrimaryKey
+                );
+              }
+            }
+
+            continue;
+          }
+
+          // If we are going to destroy this related object, check it for orphaned children and remove them too.
+          // recursively
+          destroyOrphans({
+            item: { [relationship.__primaryKey]: itemPrimaryKey },
+            name: relationship.__name,
+            primaryKey: relationship.__primaryKey,
+          });
+
+          // If all references are to the item we are deleting, remove all refs and delete the object too
+          delete references.current[relationship.__name][itemPrimaryKey];
+          delete state[relationship.__name][itemPrimaryKey];
+        }
+      }
 
       // Lastly, delete the object
       // We have already destroyed all orphans.
       delete state[name][item[primaryKey]];
 
       // Delete the item from any index it is referenced in.
-      itemSchema.__indexes.forEach((indexName) => {
-        const index = state[indexName] as ORS.Index;
+      for (let m = 0; m < itemSchema.__indexes.length; m++) {
+        const index = state[itemSchema.__indexes[m]] as ORS.Index;
         const objectKey: ORS.Index[number] = `${name}-${item[primaryKey]}`;
         const i = index.indexOf(objectKey);
         if (i !== -1) index.splice(i, 1);
-      });
+      }
     }
 
     function destroyReferences(params: {
@@ -428,7 +448,10 @@ export function createStore<
           typeof item.__indexes__ === "string"
             ? [item.__indexes__]
             : item.__indexes__;
-        __indexes__?.forEach((indexKey) => {
+
+        for (let i = 0; i < (__indexes__?.length ?? 0); i++) {
+          const indexKey = __indexes__![i];
+
           const [indexName] = indexKey.split("-");
 
           // @ts-ignore
@@ -452,7 +475,7 @@ export function createStore<
           if (!!(state[indexKey] as ORS.Index).includes(objKey)) return;
 
           (state[indexKey] as ORS.Index).push(objKey);
-        });
+        }
 
         delete item.__indexes__;
       }
@@ -463,14 +486,14 @@ export function createStore<
             ? [item.__removeFromIndexes__]
             : item.__removeFromIndexes__;
 
-        __removeFromIndexes__?.forEach((indexKey) => {
+        for (let i = 0; i < (__removeFromIndexes__?.length ?? 0); i++) {
+          const indexKey = __removeFromIndexes__![i];
           if (!state[indexKey]) return;
-
           const objKey: ORS.Index[number] = `${name}-${item[primaryKey]}`;
           const currentIndex = state[indexKey] as ORS.Index;
           const selectedIndex = currentIndex.indexOf(objKey);
           if (selectedIndex > -1) state[indexKey].splice(selectedIndex, 1);
-        });
+        }
 
         delete item.__removeFromIndexes__;
       }
@@ -478,7 +501,10 @@ export function createStore<
       /**
        * Traverse inside the object and add all related fields to state.
        */
-      Object.entries(item).forEach(([field, value]: any) => {
+      const itemEntries = Object.entries(item);
+      for (let i = 0; i < itemEntries.length; i++) {
+        const [field, value] = itemEntries[i];
+
         const fieldRelationship = relationalObject.__relationship[field];
 
         // If this field is a related field, traverse in recursively
@@ -492,7 +518,7 @@ export function createStore<
 
               // Clear all relation between this object and the referenced object.
               cleanReferences(`${name}.${item[primaryKey]}.${field}`, pk);
-              return;
+              continue;
             }
 
             // hasOne and the item is a foreign key OR if it is null
@@ -504,7 +530,7 @@ export function createStore<
                 );
 
               state[name][item[primaryKey]][field] = item[field];
-              return;
+              continue;
             }
 
             // If the item is not an object return
@@ -513,7 +539,7 @@ export function createStore<
               item[field] === undefined ||
               typeof item[field] !== "object"
             )
-              return;
+              continue;
 
             mutateOne({
               item: item[field],
@@ -521,18 +547,20 @@ export function createStore<
               parentField: field,
               parentName: name,
             });
-            return;
+            continue;
           }
 
           // We are deleting a many reference
           if (item[field] === null) {
             const pkObjects =
               state[name][item[primaryKey]][fieldRelationship.__alias] ?? 0;
-            for (let i = 0; i < pkObjects.length; i++) {
-              const pk = pkObjects[i];
-              cleanReferences(`${name}.${item[primaryKey]}.${field}`, pk);
+            for (let j = 0; j < pkObjects.length; j++) {
+              cleanReferences(
+                `${name}.${item[primaryKey]}.${field}`,
+                pkObjects[j]
+              );
             }
-            return;
+            continue;
           }
 
           // hasMany and all the items are foreignKeys
@@ -540,8 +568,8 @@ export function createStore<
             const itemPrimaryKey = item[primaryKey];
             const items = state[name][itemPrimaryKey][field];
             const next = [];
-            for (let i = 0; i < items?.length; i++) {
-              const pk = items[i];
+            for (let k = 0; k < items?.length; k++) {
+              const pk = items[k];
 
               if (!item[field].includes(pk)) {
                 // We used to clean all references here, but that was wrong
@@ -562,22 +590,22 @@ export function createStore<
             item[field] === undefined ||
             typeof item[field] !== "object"
           )
-            return;
+            continue;
 
-          item[field].forEach((oneItem: any) => {
+          for (let k = 0; k < item[field].length; k++) {
             mutateOne({
-              item: oneItem,
+              item: item[field][k],
               parentPrimaryKey: item[primaryKey],
               parentField: field,
               parentName: name,
               parentFieldHasMany: true,
             });
-          });
-          return;
+          }
+          continue;
         }
 
         state[name][item[primaryKey]][field] = value;
-      });
+      }
 
       /**
        * If this object is a child of someone, create a reference by primaryKey in the parent
@@ -654,9 +682,13 @@ export function createStore<
       }
     }
 
-    items.forEach((item) => !!item && mutateOne({ item }));
+    for (let i = 0; i < items.length; i++) {
+      !!items[i] && mutateOne({ item: items[i] });
+    }
 
-    indexes?.forEach(([indexName, indexUid]) => {
+    for (let i = 0; i < indexes.length; i++) {
+      const [indexName, indexUid] = indexes[i];
+
       // @ts-ignore
       const sort = (model[indexName] as ORS.RelationalObjectIndex<I, O>).__sort;
       const indexKey = `${indexName}-${indexUid}`;
@@ -666,7 +698,7 @@ export function createStore<
         const [bName, bPk] = b.split("-");
         return sort(state[aName][aPk], state[bName][bPk]);
       });
-    });
+    }
 
     listeners.forEach((listener) => listener());
   }
@@ -709,8 +741,9 @@ export function createStore<
       const indexes = state[index] as ORS.Index;
       const result: O[] = [];
       if (!indexes) return null;
-      indexes.forEach((objectKey) => {
-        const [objectName, objectPk] = objectKey.split("-");
+
+      for (let i = 0; i < indexes.length; i++) {
+        const [objectName, objectPk] = indexes[i].split("-");
         // @ts-ignore
         const { __primaryKey } = model[objectName] as ORS.RelationalObject<N>;
         const queryOptions = options
@@ -730,15 +763,15 @@ export function createStore<
           ...queryOptions,
           where: { [__primaryKey]: objectPk },
         } as ORS.SelectOptions<any, any>);
-        if (!object) return;
-        if (!queryOptions?.where) return result.push(object);
+        if (!object) continue;
         if (
           typeof queryOptions?.where === "function" &&
           !queryOptions?.where(object)
         )
-          return;
+          continue;
         result.push(object);
-      });
+      }
+
       return result;
     }
   );
@@ -769,7 +802,11 @@ export function createStore<
 
   function restore(store: ORS.RestoreStore) {
     references.current = store.references;
-    Object.entries(store.state).map(([key, value]) => (state[key] = value));
+    const entries = Object.entries(store.state);
+    for (let i = 0; i < entries.length; i++) {
+      const [key, value] = entries[i];
+      state[key] = value;
+    }
   }
 
   return {
