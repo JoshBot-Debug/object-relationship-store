@@ -1,5 +1,9 @@
 import { posts } from "../data";
-import { createRelationalObject, createStore } from "../lib/index";
+import {
+  createRelationalObject,
+  createRelationalObjectIndex,
+  createStore,
+} from "../lib/index";
 import v8 from "v8";
 
 function getObjectMemoryUsageInMB(object: any) {
@@ -1725,5 +1729,40 @@ test("#A1, #A2 ref #B - #A1 is deleted", () => {
 
   expect(store.getReferences()).toStrictEqual({
     b: { "3": ["a.2.b"] },
+  });
+});
+
+test("#A was added to an index, later it was updated and added in the index.", () => {
+  const a = createRelationalObject("a");
+  const index = createRelationalObjectIndex("as", [a]);
+
+  const store = createStore({
+    relationalCreators: [a],
+    indexes: [index],
+    identifier: {
+      a: (o) => "isA" in o,
+    },
+  });
+
+  const _a = {
+    id: 1,
+    isA: true,
+    isMember: true,
+  };
+
+  // A is a member
+  store.mutate({ ..._a, __indexes__: "as-main" });
+
+  expect(store.getState()).toStrictEqual({
+    a: { '1': { id: 1, isA: true, isMember: true } },
+    'as-main': [ 'a-1' ]
+  });
+
+  // A is not member
+  store.mutate({ ..._a, isMember: false, __indexes__: "as-main" });
+
+  expect(store.getState()).toStrictEqual({
+    a: { '1': { id: 1, isA: true, isMember: false } },
+    'as-main': [ 'a-1' ]
   });
 });

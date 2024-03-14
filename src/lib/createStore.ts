@@ -461,7 +461,7 @@ export function createStore<
           >;
 
           // If this object does not have an index, skip it.
-          if (!indexModel?.__objects.includes(name as O)) return;
+          if (!indexModel?.__objects.includes(name as O)) continue;
 
           // If the model's index does not include this, add it.
           if (!relationalObject.__indexes.includes(indexKey))
@@ -472,7 +472,7 @@ export function createStore<
 
           // If the key already exists in the index, skip it.
           const objKey: ORS.Index[number] = `${name}-${item[primaryKey]}`;
-          if (!!(state[indexKey] as ORS.Index).includes(objKey)) return;
+          if (!!(state[indexKey] as ORS.Index).includes(objKey)) continue;
 
           (state[indexKey] as ORS.Index).push(objKey);
         }
@@ -488,7 +488,7 @@ export function createStore<
 
         for (let i = 0; i < (__removeFromIndexes__?.length ?? 0); i++) {
           const indexKey = __removeFromIndexes__![i];
-          if (!state[indexKey]) return;
+          if (!state[indexKey]) continue;
           const objKey: ORS.Index[number] = `${name}-${item[primaryKey]}`;
           const currentIndex = state[indexKey] as ORS.Index;
           const selectedIndex = currentIndex.indexOf(objKey);
@@ -581,7 +581,7 @@ export function createStore<
               next.push(pk);
             }
             state[name][itemPrimaryKey][field] = next;
-            return;
+            continue;
           }
 
           // If the item is not an object return
@@ -692,7 +692,7 @@ export function createStore<
       // @ts-ignore
       const sort = (model[indexName] as ORS.RelationalObjectIndex<I, O>).__sort;
       const indexKey = `${indexName}-${indexUid}`;
-      if (!sort || !state[indexKey]) return;
+      if (!sort || !state[indexKey]) continue;
       (state[indexKey] as ORS.Index).sort((a, b) => {
         const [aName, aPk] = a.split("-");
         const [bName, bPk] = b.split("-");
@@ -786,7 +786,7 @@ export function createStore<
 
   function purge() {
     for (const key in state) {
-      if (!Object.prototype.hasOwnProperty.call(state, key)) return;
+      if (!Object.prototype.hasOwnProperty.call(state, key)) continue;
       delete state[key];
     }
     references.current = {};
