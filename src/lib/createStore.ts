@@ -727,9 +727,7 @@ export function createStore<
   const select = memo(
     <N extends string, O extends Record<string, any>>(
       options: ORS.SelectOptions<N, O>,
-      lookup?: (
-        objects: Record<string, any>[]
-      ) => O | O[] | null | Promise<O | O[] | null>
+      lookup?: ORS.Lookup
     ): O | O[] | null => {
       const result = querySelect<N, O>(model, state, options);
       if (lookup) {
@@ -757,7 +755,7 @@ export function createStore<
       >,
       lookup?: (
         objects: Record<string, any>[]
-      ) => O | O[] | null | Promise<O | O[] | null>
+      ) => ORS.Lookup
     ) => {
       const indexes = state[index] as ORS.Index;
       const result: O[] = [];

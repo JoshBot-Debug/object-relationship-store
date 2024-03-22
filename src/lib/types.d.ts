@@ -155,4 +155,6 @@ export namespace ORS {
     state: ORS.State;
     references: ORS.ReferenceStore["current"];
   }
+
+  export type Lookup = (objects: Record<string, any>[]) => O | O[] | Promise<O | O[] | null> | null
 }
