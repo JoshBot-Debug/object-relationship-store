@@ -2,7 +2,6 @@ import { type ORS } from "./types";
 import querySelect from "./query/select";
 import { deepCopy, memo } from "./utils";
 import withOptions from "./helper/withOptions";
-import extractMissingFields from "./query/extractMissingFields";
 
 export function createStore<
   N extends string,
@@ -565,11 +564,6 @@ export function createStore<
           }
 
           // hasMany and all the items are foreignKeys
-          if (!Array.isArray(item[field]))
-            throw new Error(
-              `Expected an array of object for field ${field}. The relationship here is one to many.`
-            );
-
           if (item[field].every((i: any) => typeof i !== "object")) {
             const itemPrimaryKey = item[primaryKey];
             const items = state[name][itemPrimaryKey][field];
@@ -726,19 +720,9 @@ export function createStore<
 
   const select = memo(
     <N extends string, O extends Record<string, any>>(
-      options: ORS.SelectOptions<N, O>,
-      lookup?: ORS.Lookup
+      options: ORS.SelectOptions<N, O>
     ): O | O[] | null => {
-      const result = querySelect<N, O>(model, state, options);
-      if (lookup) {
-        const lookupResult = lookup(
-          extractMissingFields(state, model, result, options)
-        );
-        if (lookupResult instanceof Promise)
-          lookupResult.then((r) => !!r && mutate(r));
-        else lookupResult && mutate(lookupResult);
-      }
-      return result;
+      return querySelect<N, O>(model, state, options);
     }
   );
 
@@ -752,14 +736,10 @@ export function createStore<
       options?: Record<
         string,
         ORS.Replace<ORS.SelectOptions<N, O>, "where", (object: any) => boolean>
-      >,
-      lookup?: (
-        objects: Record<string, any>[]
-      ) => ORS.Lookup
+      >
     ) => {
       const indexes = state[index] as ORS.Index;
       const result: O[] = [];
-      const missing: Record<string, any>[] = [];
       if (!indexes) return null;
 
       for (let i = 0; i < indexes.length; i++) {
@@ -779,11 +759,10 @@ export function createStore<
             `selectIndex() expected SelectOptions for "${objectName}" in the index "${index}".`
           );
 
-        const optionsWithWhere = {
+        const object = querySelect(model, state, {
           ...queryOptions,
           where: { [__primaryKey]: objectPk },
-        } as ORS.SelectOptions<any, any>;
-        const object = querySelect(model, state, optionsWithWhere);
+        } as ORS.SelectOptions<any, any>);
         if (!object) continue;
         if (
           typeof queryOptions?.where === "function" &&
@@ -791,18 +770,8 @@ export function createStore<
         )
           continue;
         result.push(object);
-        if (lookup)
-          missing.push(
-            ...extractMissingFields(state, model, object, optionsWithWhere)
-          );
       }
 
-      if (lookup) {
-        const lookupResult = lookup(missing);
-        if (lookupResult instanceof Promise)
-          lookupResult.then((r) => !!r && mutate(r));
-        else lookupResult && mutate(lookupResult);
-      }
       return result;
     }
   );
