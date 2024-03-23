@@ -6,882 +6,881 @@ import {
   createRelationalObjectIndex,
 } from "./lib/index";
 
-const user = createRelationalObject("user");
-const image = createRelationalObject("image");
-const imageThumbnail = createRelationalObject("thumbnail");
-const post = createRelationalObject("post");
-const postComment = createRelationalObject("postComment");
-const following = createRelationalObject("following");
+// const user = createRelationalObject("user");
+// const image = createRelationalObject("image");
+// const imageThumbnail = createRelationalObject("thumbnail");
+// const post = createRelationalObject("post");
+// const postComment = createRelationalObject("postComment");
+// const following = createRelationalObject("following");
 
-const blockedUsers = createRelationalObjectIndex(
-  "blockedUsers",
-  [user],
-  (a, b) => (a.id > b.id ? -1 : 1)
-);
-const profilePosts = createRelationalObjectIndex(
-  "profilePosts",
-  [post],
-  (a, b) => (a.id > b.id ? -1 : 1)
-);
-const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) =>
-  a.id > b.id ? -1 : 1
-);
-const postComments = createRelationalObjectIndex(
-  "postComments",
-  [postComment],
-  (a, b) => (a.id > b.id ? -1 : 1)
-);
+// const blockedUsers = createRelationalObjectIndex(
+//   "blockedUsers",
+//   [user],
+//   (a, b) => (a.id > b.id ? -1 : 1)
+// );
+// const profilePosts = createRelationalObjectIndex(
+//   "profilePosts",
+//   [post],
+//   (a, b) => (a.id > b.id ? -1 : 1)
+// );
+// const homeFeed = createRelationalObjectIndex("homeFeed", [post], (a, b) =>
+//   a.id > b.id ? -1 : 1
+// );
+// const postComments = createRelationalObjectIndex(
+//   "postComments",
+//   [postComment],
+//   (a, b) => (a.id > b.id ? -1 : 1)
+// );
 
-postComment.hasMany(postComment, "replies");
-postComment.hasOne(postComment, "replyingTo");
-postComment.hasOne(post);
-postComment.hasOne(user);
+// postComment.hasMany(postComment, "replies");
+// postComment.hasOne(postComment, "replyingTo");
+// postComment.hasOne(post);
+// postComment.hasOne(user);
 
-post.hasOne(user);
-post.hasMany(image, "images");
+// post.hasOne(user);
+// post.hasMany(image, "images");
 
-user.hasOne(image, "profileImage");
-user.hasOne(image, "bannerImage");
-user.hasOne(image, "layoutImage");
-image.hasMany(imageThumbnail, "thumbnails");
+// user.hasOne(image, "profileImage");
+// user.hasOne(image, "bannerImage");
+// user.hasOne(image, "layoutImage");
+// image.hasMany(imageThumbnail, "thumbnails");
 
-following.hasOne(user);
-following.hasOne(user, "following");
+// following.hasOne(user);
+// following.hasOne(user, "following");
 
-const message = createRelationalObject("message");
-const room = createRelationalObject("room");
-const roomParticipant = createRelationalObject("roomParticipant");
-const messageRoom = createRelationalObjectIndex(
-  "messageRoom",
-  [message],
-  (a, b) => (a.id > b.id ? -1 : 1)
-);
+// const message = createRelationalObject("message");
+// const room = createRelationalObject("room");
+// const roomParticipant = createRelationalObject("roomParticipant");
+// const messageRoom = createRelationalObjectIndex(
+//   "messageRoom",
+//   [message],
+//   (a, b) => (a.id > b.id ? -1 : 1)
+// );
 
-room.hasOne(roomParticipant, "participant");
-room.hasMany(roomParticipant, "participants");
-room.hasMany(message, "messages");
-room.hasMany(user, "typing");
-roomParticipant.hasOne(room, "room");
-roomParticipant.hasOne(user, "user");
-roomParticipant.hasOne(user, "privateOtherUser");
-room.hasOne(image, "image");
-room.hasOne(image, "backgroundImage");
-user.hasMany(roomParticipant, "roomMembership");
+// room.hasOne(roomParticipant, "participant");
+// room.hasMany(roomParticipant, "participants");
+// room.hasMany(message, "messages");
+// room.hasMany(user, "typing");
+// roomParticipant.hasOne(room, "room");
+// roomParticipant.hasOne(user, "user");
+// roomParticipant.hasOne(user, "privateOtherUser");
+// room.hasOne(image, "image");
+// room.hasOne(image, "backgroundImage");
+// user.hasMany(roomParticipant, "roomMembership");
 
-const inbox = createRelationalObjectIndex("inbox", [room], (a, b) =>
-  +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
-);
-const groups = createRelationalObjectIndex("groups", [room], (a, b) =>
-  +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
-);
-const members = createRelationalObjectIndex(
-  "members",
-  [roomParticipant],
-  (a, b) => (+new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1)
-);
-const followings = createRelationalObjectIndex("follow", [following], (a, b) =>
-  +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
-);
+// const inbox = createRelationalObjectIndex("inbox", [room], (a, b) =>
+//   +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
+// );
+// const groups = createRelationalObjectIndex("groups", [room], (a, b) =>
+//   +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
+// );
+// const members = createRelationalObjectIndex(
+//   "members",
+//   [roomParticipant],
+//   (a, b) => (+new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1)
+// );
+// const followings = createRelationalObjectIndex("follow", [following], (a, b) =>
+//   +new Date(a.updatedAt) > +new Date(b.updatedAt) ? -1 : 1
+// );
 
-const store = createStore({
-  relationalCreators: [
-    user,
-    image,
-    imageThumbnail,
-    post,
-    postComment,
-    room,
-    roomParticipant,
-    message,
-    following,
-  ],
-  indexes: [
-    homeFeed,
-    postComments,
-    profilePosts,
-    blockedUsers,
-    inbox,
-    groups,
-    messageRoom,
-    members,
-    followings,
-  ],
-  identifier: {
-    user: (o) => "username" in o,
-    post: (o) => "caption" in o,
-    image: (o) => "baseScale" in o,
-    thumbnail: (o) => "uri" in o,
-    postComment: (o) => "replyingToId" in o,
-    message: (o) => "roomId" in o && "userId" in o && "content" in o,
-    room: (o) => "participants" in o || "participant" in o || "isPrivate" in o,
-    following: (o) => "followingUserId" in o,
-    roomParticipant: (o) =>
-      "privateOtherUser" in o ||
-      "isChatAccepted" in o ||
-      ("roomId" in o && ("userId" in o || "user" in o)) ||
-      "isBanned" in o ||
-      "isModerator" in o ||
-      "isAdministrator" in o,
-  },
-});
+// const store = createStore({
+//   relationalCreators: [
+//     user,
+//     image,
+//     imageThumbnail,
+//     post,
+//     postComment,
+//     room,
+//     roomParticipant,
+//     message,
+//     following,
+//   ],
+//   indexes: [
+//     homeFeed,
+//     postComments,
+//     profilePosts,
+//     blockedUsers,
+//     inbox,
+//     groups,
+//     messageRoom,
+//     members,
+//     followings,
+//   ],
+//   identifier: {
+//     user: (o) => "username" in o,
+//     post: (o) => "caption" in o,
+//     image: (o) => "baseScale" in o,
+//     thumbnail: (o) => "uri" in o,
+//     postComment: (o) => "replyingToId" in o,
+//     message: (o) => "roomId" in o && "userId" in o && "content" in o,
+//     room: (o) => "participants" in o || "participant" in o || "isPrivate" in o,
+//     following: (o) => "followingUserId" in o,
+//     roomParticipant: (o) =>
+//       "privateOtherUser" in o ||
+//       "isChatAccepted" in o ||
+//       ("roomId" in o && ("userId" in o || "user" in o)) ||
+//       "isBanned" in o ||
+//       "isModerator" in o ||
+//       "isAdministrator" in o,
+//   },
+// });
 
-// store.mutate({"contentRating": "SFK", "id": 203, "profileImage": {id: 1, thumbnails: [{id: 2, __identify__: "thumbnail"}], __identify__: "image"}, "username": "abc"})
-// console.log(store.getState())
-// console.log(store.getReferences())
+// // store.mutate({"contentRating": "SFK", "id": 203, "profileImage": {id: 1, thumbnails: [{id: 2, __identify__: "thumbnail"}], __identify__: "image"}, "username": "abc"})
+// // console.log(store.getState())
+// // console.log(store.getReferences())
 
-// store.mutate({"contentRating": "SFK", "id": 203, "profileImage": null, "username": "abc"})
-// store.mutate({"id": 203, "images": [{id: 1, __identify__: "image"}], __identify__: "post"})
-// store.mutate({"id": 203, "images": null, __identify__: "post"})
-// console.log(store.getState())
-// console.log(store.getReferences())
-// { from: "room", where: { id: message.roomId }, fields: ["typing"] }
-// store.mutate({
-//   __identify__: "user",
-//   id: 10,
+// // store.mutate({"contentRating": "SFK", "id": 203, "profileImage": null, "username": "abc"})
+// // store.mutate({"id": 203, "images": [{id: 1, __identify__: "image"}], __identify__: "post"})
+// // store.mutate({"id": 203, "images": null, __identify__: "post"})
+// // console.log(store.getState())
+// // console.log(store.getReferences())
+// // { from: "room", where: { id: message.roomId }, fields: ["typing"] }
+// // store.mutate({
+// //   __identify__: "user",
+// //   id: 10,
+// // })
+// store.restore({
+//   "state": {
+//       "user": {
+//           "2": {
+//               "id": 2,
+//               "username": "the_overlord",
+//               "contentRating": "SFK",
+//               "profileImage": 11,
+//               "isOnline": true,
+//               "profileImageId": 11
+//           },
+//           "3": {
+//               "id": 3,
+//               "username": "qwerty",
+//               "roomMembership": [
+//                   78
+//               ]
+//           },
+//           "201": {
+//               "id": 201,
+//               "username": "ise",
+//               "roomMembership": [
+//                   82
+//               ]
+//           },
+//           "203": {
+//               "id": 203,
+//               "username": "abc",
+//               "roomMembership": [
+//                   85
+//               ]
+//           }
+//       },
+//       "image": {
+//           "11": {
+//               "id": 11,
+//               "baseScale": "1.4",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "252",
+//               "originContainerHeight": "252",
+//               "aspectRatio": 0.730469,
+//               "thumbnails": [
+//                   40,
+//                   41,
+//                   42
+//               ]
+//           },
+//           "12": {
+//               "id": 12,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "455",
+//               "aspectRatio": 0.796875,
+//               "thumbnails": [
+//                   43,
+//                   44,
+//                   45,
+//                   46,
+//                   47
+//               ]
+//           },
+//           "13": {
+//               "id": 13,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "455",
+//               "aspectRatio": 0.664062,
+//               "thumbnails": [
+//                   48,
+//                   49,
+//                   50,
+//                   51,
+//                   52
+//               ]
+//           },
+//           "14": {
+//               "id": 14,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "455",
+//               "aspectRatio": 0.679688,
+//               "thumbnails": [
+//                   53,
+//                   54,
+//                   55,
+//                   56,
+//                   57
+//               ]
+//           },
+//           "15": {
+//               "id": 15,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "455",
+//               "aspectRatio": 0.664062,
+//               "thumbnails": [
+//                   58,
+//                   59,
+//                   60,
+//                   61,
+//                   62
+//               ]
+//           },
+//           "16": {
+//               "id": 16,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "455",
+//               "aspectRatio": 0.984375,
+//               "thumbnails": [
+//                   63,
+//                   64,
+//                   65,
+//                   66,
+//                   67
+//               ]
+//           },
+//           "26": {
+//               "id": 26,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "453",
+//               "aspectRatio": 0.664062,
+//               "thumbnails": [
+//                   97,
+//                   98,
+//                   99,
+//                   100,
+//                   101
+//               ]
+//           },
+//           "28": {
+//               "id": 28,
+//               "baseScale": "1",
+//               "pinchScale": "1",
+//               "translateX": "0",
+//               "translateY": "0",
+//               "originContainerWidth": "768",
+//               "originContainerHeight": "453",
+//               "aspectRatio": 0.921875,
+//               "thumbnails": [
+//                   107,
+//                   108,
+//                   109,
+//                   110,
+//                   111
+//               ]
+//           }
+//       },
+//       "thumbnail": {
+//           "40": {
+//               "id": 40,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/profilePhoto.256.jpeg?1696660732580",
+//               "height": 256,
+//               "width": 187
+//           },
+//           "41": {
+//               "id": 41,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/profilePhoto.512.jpeg?1696660732581",
+//               "height": 512,
+//               "width": 373
+//           },
+//           "42": {
+//               "id": 42,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/profilePhoto.original.jpeg?1696660732579",
+//               "height": 851,
+//               "width": 620
+//           },
+//           "43": {
+//               "id": 43,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262726.0-1.128.jpeg",
+//               "height": 128,
+//               "width": 102
+//           },
+//           "44": {
+//               "id": 44,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262726.0-2.256.jpeg",
+//               "height": 256,
+//               "width": 204
+//           },
+//           "45": {
+//               "id": 45,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.0-3.512.jpeg",
+//               "height": 512,
+//               "width": 408
+//           },
+//           "46": {
+//               "id": 46,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.0-4.720.jpeg",
+//               "height": 720,
+//               "width": 574
+//           },
+//           "47": {
+//               "id": 47,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262724.0-0.original.jpeg",
+//               "height": 3880,
+//               "width": 3092
+//           },
+//           "48": {
+//               "id": 48,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.1-1.128.jpeg",
+//               "height": 128,
+//               "width": 85
+//           },
+//           "49": {
+//               "id": 49,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262728.1-2.256.jpeg",
+//               "height": 256,
+//               "width": 171
+//           },
+//           "50": {
+//               "id": 50,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262728.1-3.512.jpeg",
+//               "height": 512,
+//               "width": 341
+//           },
+//           "51": {
+//               "id": 51,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262728.1-4.720.jpeg",
+//               "height": 720,
+//               "width": 480
+//           },
+//           "52": {
+//               "id": 52,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.1-0.original.jpeg",
+//               "height": 1152,
+//               "width": 768
+//           },
+//           "53": {
+//               "id": 53,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262729.2-1.128.jpeg",
+//               "height": 128,
+//               "width": 87
+//           },
+//           "54": {
+//               "id": 54,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262729.2-2.256.jpeg",
+//               "height": 256,
+//               "width": 174
+//           },
+//           "55": {
+//               "id": 55,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262730.2-3.512.jpeg",
+//               "height": 512,
+//               "width": 349
+//           },
+//           "56": {
+//               "id": 56,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262730.2-4.720.jpeg",
+//               "height": 720,
+//               "width": 490
+//           },
+//           "57": {
+//               "id": 57,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262729.2-0.original.jpeg",
+//               "height": 4512,
+//               "width": 3072
+//           },
+//           "58": {
+//               "id": 58,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-1.128.jpeg",
+//               "height": 128,
+//               "width": 85
+//           },
+//           "59": {
+//               "id": 59,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-2.256.jpeg",
+//               "height": 256,
+//               "width": 171
+//           },
+//           "60": {
+//               "id": 60,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-3.512.jpeg",
+//               "height": 512,
+//               "width": 341
+//           },
+//           "61": {
+//               "id": 61,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-4.720.jpeg",
+//               "height": 720,
+//               "width": 480
+//           },
+//           "62": {
+//               "id": 62,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262730.3-0.original.jpeg",
+//               "height": 1728,
+//               "width": 1152
+//           },
+//           "63": {
+//               "id": 63,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-1.128.jpeg",
+//               "height": 128,
+//               "width": 126
+//           },
+//           "64": {
+//               "id": 64,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-2.256.jpeg",
+//               "height": 256,
+//               "width": 252
+//           },
+//           "65": {
+//               "id": 65,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-3.512.jpeg",
+//               "height": 512,
+//               "width": 505
+//           },
+//           "66": {
+//               "id": 66,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-4.720.jpeg",
+//               "height": 720,
+//               "width": 710
+//           },
+//           "67": {
+//               "id": 67,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-0.original.jpeg",
+//               "height": 2240,
+//               "width": 2208
+//           },
+//           "97": {
+//               "id": 97,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-1.128.jpeg",
+//               "height": 128,
+//               "width": 85
+//           },
+//           "98": {
+//               "id": 98,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-2.256.jpeg",
+//               "height": 256,
+//               "width": 171
+//           },
+//           "99": {
+//               "id": 99,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-3.512.jpeg",
+//               "height": 512,
+//               "width": 341
+//           },
+//           "100": {
+//               "id": 100,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-4.720.jpeg",
+//               "height": 720,
+//               "width": 480
+//           },
+//           "101": {
+//               "id": 101,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078927.0-0.original.jpeg",
+//               "height": 2304,
+//               "width": 1536
+//           },
+//           "107": {
+//               "id": 107,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642398.0-1.128.jpeg",
+//               "height": 128,
+//               "width": 118
+//           },
+//           "108": {
+//               "id": 108,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642398.0-2.256.jpeg",
+//               "height": 256,
+//               "width": 236
+//           },
+//           "109": {
+//               "id": 109,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642398.0-3.512.jpeg",
+//               "height": 512,
+//               "width": 472
+//           },
+//           "110": {
+//               "id": 110,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642399.0-4.720.jpeg",
+//               "height": 720,
+//               "width": 664
+//           },
+//           "111": {
+//               "id": 111,
+//               "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642397.0-0.original.jpeg",
+//               "height": 889,
+//               "width": 820
+//           }
+//       },
+//       "post": {
+//           "3": {
+//               "id": 3,
+//               "caption": "Warning... HENTAI 🔥",
+//               "contentRating": "R18",
+//               "createdAt": "2023-10-09T17:07:45.000Z",
+//               "likeCount": 3,
+//               "commentsCount": 3,
+//               "isLiked": 1,
+//               "images": [
+//                   12,
+//                   13,
+//                   14,
+//                   15,
+//                   16
+//               ],
+//               "user": 2
+//           },
+//           "5": {
+//               "id": 5,
+//               "caption": "",
+//               "contentRating": "SFK",
+//               "createdAt": "2023-12-29T10:18:02.000Z",
+//               "likeCount": 1,
+//               "commentsCount": 3,
+//               "isLiked": 1,
+//               "images": [
+//                   26
+//               ],
+//               "user": 2
+//           },
+//           "7": {
+//               "id": 7,
+//               "caption": "Guess who  😂",
+//               "contentRating": "SFK",
+//               "createdAt": "2024-01-14T14:14:04.000Z",
+//               "likeCount": 2,
+//               "commentsCount": 4,
+//               "isLiked": 1,
+//               "images": [
+//                   28
+//               ],
+//               "user": 2
+//           }
+//       },
+//       "homeFeed-main": [
+//           "post-7",
+//           "post-5",
+//           "post-3"
+//       ],
+//       "room": {
+//           "38": {
+//               "id": 38,
+//               "updatedAt": "2023-12-05T13:25:14.423Z",
+//               "title": null,
+//               "isPrivate": true,
+//               "participant": 78,
+//               "lastMessage": "k"
+//           },
+//           "40": {
+//               "id": 40,
+//               "updatedAt": "2024-01-23T15:58:16.503Z",
+//               "title": null,
+//               "isPrivate": true,
+//               "participant": 82,
+//               "lastMessage": "Hey"
+//           },
+//           "41": {
+//               "id": 41,
+//               "updatedAt": "2024-01-23T16:17:53.701Z",
+//               "title": null,
+//               "isPrivate": true,
+//               "participant": 85,
+//               "lastMessage": "d",
+//               "typing": [
+//                   203
+//               ]
+//           }
+//       },
+//       "inbox-main": [
+//           "room-41",
+//           "room-40",
+//           "room-38"
+//       ],
+//       "roomParticipant": {
+//           "78": {
+//               "id": 78,
+//               "roomId": 38,
+//               "isChatAccepted": 1,
+//               "user": 3,
+//               "room": 38
+//           },
+//           "82": {
+//               "id": 82,
+//               "roomId": 40,
+//               "isChatAccepted": 1,
+//               "user": 201,
+//               "room": 40
+//           },
+//           "85": {
+//               "id": 85,
+//               "roomId": 41,
+//               "isChatAccepted": 1,
+//               "user": 203,
+//               "room": 41
+//           }
+//       }
+//   },
+//   "references": {
+//       "thumbnail": {
+//           "40": [
+//               "image.11.thumbnails"
+//           ],
+//           "41": [
+//               "image.11.thumbnails"
+//           ],
+//           "42": [
+//               "image.11.thumbnails"
+//           ],
+//           "43": [
+//               "image.12.thumbnails"
+//           ],
+//           "44": [
+//               "image.12.thumbnails"
+//           ],
+//           "45": [
+//               "image.12.thumbnails"
+//           ],
+//           "46": [
+//               "image.12.thumbnails"
+//           ],
+//           "47": [
+//               "image.12.thumbnails"
+//           ],
+//           "48": [
+//               "image.13.thumbnails"
+//           ],
+//           "49": [
+//               "image.13.thumbnails"
+//           ],
+//           "50": [
+//               "image.13.thumbnails"
+//           ],
+//           "51": [
+//               "image.13.thumbnails"
+//           ],
+//           "52": [
+//               "image.13.thumbnails"
+//           ],
+//           "53": [
+//               "image.14.thumbnails"
+//           ],
+//           "54": [
+//               "image.14.thumbnails"
+//           ],
+//           "55": [
+//               "image.14.thumbnails"
+//           ],
+//           "56": [
+//               "image.14.thumbnails"
+//           ],
+//           "57": [
+//               "image.14.thumbnails"
+//           ],
+//           "58": [
+//               "image.15.thumbnails"
+//           ],
+//           "59": [
+//               "image.15.thumbnails"
+//           ],
+//           "60": [
+//               "image.15.thumbnails"
+//           ],
+//           "61": [
+//               "image.15.thumbnails"
+//           ],
+//           "62": [
+//               "image.15.thumbnails"
+//           ],
+//           "63": [
+//               "image.16.thumbnails"
+//           ],
+//           "64": [
+//               "image.16.thumbnails"
+//           ],
+//           "65": [
+//               "image.16.thumbnails"
+//           ],
+//           "66": [
+//               "image.16.thumbnails"
+//           ],
+//           "67": [
+//               "image.16.thumbnails"
+//           ],
+//           "97": [
+//               "image.26.thumbnails"
+//           ],
+//           "98": [
+//               "image.26.thumbnails"
+//           ],
+//           "99": [
+//               "image.26.thumbnails"
+//           ],
+//           "100": [
+//               "image.26.thumbnails"
+//           ],
+//           "101": [
+//               "image.26.thumbnails"
+//           ],
+//           "107": [
+//               "image.28.thumbnails"
+//           ],
+//           "108": [
+//               "image.28.thumbnails"
+//           ],
+//           "109": [
+//               "image.28.thumbnails"
+//           ],
+//           "110": [
+//               "image.28.thumbnails"
+//           ],
+//           "111": [
+//               "image.28.thumbnails"
+//           ]
+//       },
+//       "image": {
+//           "11": [
+//               "user.2.profileImage"
+//           ],
+//           "12": [
+//               "post.3.images"
+//           ],
+//           "13": [
+//               "post.3.images"
+//           ],
+//           "14": [
+//               "post.3.images"
+//           ],
+//           "15": [
+//               "post.3.images"
+//           ],
+//           "16": [
+//               "post.3.images"
+//           ],
+//           "26": [
+//               "post.5.images"
+//           ],
+//           "28": [
+//               "post.7.images"
+//           ]
+//       },
+//       "user": {
+//           "2": [
+//               "post.7.user",
+//               "post.5.user",
+//               "post.3.user"
+//           ],
+//           "3": [
+//               "roomParticipant.78.user"
+//           ],
+//           "201": [
+//               "roomParticipant.82.user"
+//           ],
+//           "203": [
+//               "roomParticipant.85.user",
+//               "room.41.typing"
+//           ]
+//       },
+//       "roomParticipant": {
+//           "78": [
+//               "user.3.roomMembership",
+//               "room.38.participant"
+//           ],
+//           "82": [
+//               "user.201.roomMembership",
+//               "room.40.participant"
+//           ],
+//           "85": [
+//               "user.203.roomMembership",
+//               "room.41.participant"
+//           ]
+//       },
+//       "room": {
+//           "38": [
+//               "roomParticipant.78.room"
+//           ],
+//           "40": [
+//               "roomParticipant.82.room"
+//           ],
+//           "41": [
+//               "roomParticipant.85.room"
+//           ]
+//       }
+//   }
 // })
-store.restore({
-  "state": {
-      "user": {
-          "2": {
-              "id": 2,
-              "username": "the_overlord",
-              "contentRating": "SFK",
-              "profileImage": 11,
-              "isOnline": true,
-              "profileImageId": 11
-          },
-          "3": {
-              "id": 3,
-              "username": "qwerty",
-              "roomMembership": [
-                  78
-              ]
-          },
-          "201": {
-              "id": 201,
-              "username": "ise",
-              "roomMembership": [
-                  82
-              ]
-          },
-          "203": {
-              "id": 203,
-              "username": "abc",
-              "roomMembership": [
-                  85
-              ]
-          }
-      },
-      "image": {
-          "11": {
-              "id": 11,
-              "baseScale": "1.4",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "252",
-              "originContainerHeight": "252",
-              "aspectRatio": 0.730469,
-              "thumbnails": [
-                  40,
-                  41,
-                  42
-              ]
-          },
-          "12": {
-              "id": 12,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "455",
-              "aspectRatio": 0.796875,
-              "thumbnails": [
-                  43,
-                  44,
-                  45,
-                  46,
-                  47
-              ]
-          },
-          "13": {
-              "id": 13,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "455",
-              "aspectRatio": 0.664062,
-              "thumbnails": [
-                  48,
-                  49,
-                  50,
-                  51,
-                  52
-              ]
-          },
-          "14": {
-              "id": 14,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "455",
-              "aspectRatio": 0.679688,
-              "thumbnails": [
-                  53,
-                  54,
-                  55,
-                  56,
-                  57
-              ]
-          },
-          "15": {
-              "id": 15,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "455",
-              "aspectRatio": 0.664062,
-              "thumbnails": [
-                  58,
-                  59,
-                  60,
-                  61,
-                  62
-              ]
-          },
-          "16": {
-              "id": 16,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "455",
-              "aspectRatio": 0.984375,
-              "thumbnails": [
-                  63,
-                  64,
-                  65,
-                  66,
-                  67
-              ]
-          },
-          "26": {
-              "id": 26,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "453",
-              "aspectRatio": 0.664062,
-              "thumbnails": [
-                  97,
-                  98,
-                  99,
-                  100,
-                  101
-              ]
-          },
-          "28": {
-              "id": 28,
-              "baseScale": "1",
-              "pinchScale": "1",
-              "translateX": "0",
-              "translateY": "0",
-              "originContainerWidth": "768",
-              "originContainerHeight": "453",
-              "aspectRatio": 0.921875,
-              "thumbnails": [
-                  107,
-                  108,
-                  109,
-                  110,
-                  111
-              ]
-          }
-      },
-      "thumbnail": {
-          "40": {
-              "id": 40,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/profilePhoto.256.jpeg?1696660732580",
-              "height": 256,
-              "width": 187
-          },
-          "41": {
-              "id": 41,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/profilePhoto.512.jpeg?1696660732581",
-              "height": 512,
-              "width": 373
-          },
-          "42": {
-              "id": 42,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/profilePhoto.original.jpeg?1696660732579",
-              "height": 851,
-              "width": 620
-          },
-          "43": {
-              "id": 43,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262726.0-1.128.jpeg",
-              "height": 128,
-              "width": 102
-          },
-          "44": {
-              "id": 44,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262726.0-2.256.jpeg",
-              "height": 256,
-              "width": 204
-          },
-          "45": {
-              "id": 45,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.0-3.512.jpeg",
-              "height": 512,
-              "width": 408
-          },
-          "46": {
-              "id": 46,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.0-4.720.jpeg",
-              "height": 720,
-              "width": 574
-          },
-          "47": {
-              "id": 47,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262724.0-0.original.jpeg",
-              "height": 3880,
-              "width": 3092
-          },
-          "48": {
-              "id": 48,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.1-1.128.jpeg",
-              "height": 128,
-              "width": 85
-          },
-          "49": {
-              "id": 49,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262728.1-2.256.jpeg",
-              "height": 256,
-              "width": 171
-          },
-          "50": {
-              "id": 50,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262728.1-3.512.jpeg",
-              "height": 512,
-              "width": 341
-          },
-          "51": {
-              "id": 51,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262728.1-4.720.jpeg",
-              "height": 720,
-              "width": 480
-          },
-          "52": {
-              "id": 52,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262727.1-0.original.jpeg",
-              "height": 1152,
-              "width": 768
-          },
-          "53": {
-              "id": 53,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262729.2-1.128.jpeg",
-              "height": 128,
-              "width": 87
-          },
-          "54": {
-              "id": 54,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262729.2-2.256.jpeg",
-              "height": 256,
-              "width": 174
-          },
-          "55": {
-              "id": 55,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262730.2-3.512.jpeg",
-              "height": 512,
-              "width": 349
-          },
-          "56": {
-              "id": 56,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262730.2-4.720.jpeg",
-              "height": 720,
-              "width": 490
-          },
-          "57": {
-              "id": 57,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262729.2-0.original.jpeg",
-              "height": 4512,
-              "width": 3072
-          },
-          "58": {
-              "id": 58,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-1.128.jpeg",
-              "height": 128,
-              "width": 85
-          },
-          "59": {
-              "id": 59,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-2.256.jpeg",
-              "height": 256,
-              "width": 171
-          },
-          "60": {
-              "id": 60,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-3.512.jpeg",
-              "height": 512,
-              "width": 341
-          },
-          "61": {
-              "id": 61,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.3-4.720.jpeg",
-              "height": 720,
-              "width": 480
-          },
-          "62": {
-              "id": 62,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262730.3-0.original.jpeg",
-              "height": 1728,
-              "width": 1152
-          },
-          "63": {
-              "id": 63,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-1.128.jpeg",
-              "height": 128,
-              "width": 126
-          },
-          "64": {
-              "id": 64,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-2.256.jpeg",
-              "height": 256,
-              "width": 252
-          },
-          "65": {
-              "id": 65,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-3.512.jpeg",
-              "height": 512,
-              "width": 505
-          },
-          "66": {
-              "id": 66,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-4.720.jpeg",
-              "height": 720,
-              "width": 710
-          },
-          "67": {
-              "id": 67,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1696871262731.4-0.original.jpeg",
-              "height": 2240,
-              "width": 2208
-          },
-          "97": {
-              "id": 97,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-1.128.jpeg",
-              "height": 128,
-              "width": 85
-          },
-          "98": {
-              "id": 98,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-2.256.jpeg",
-              "height": 256,
-              "width": 171
-          },
-          "99": {
-              "id": 99,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-3.512.jpeg",
-              "height": 512,
-              "width": 341
-          },
-          "100": {
-              "id": 100,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078929.0-4.720.jpeg",
-              "height": 720,
-              "width": 480
-          },
-          "101": {
-              "id": 101,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1703845078927.0-0.original.jpeg",
-              "height": 2304,
-              "width": 1536
-          },
-          "107": {
-              "id": 107,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642398.0-1.128.jpeg",
-              "height": 128,
-              "width": 118
-          },
-          "108": {
-              "id": 108,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642398.0-2.256.jpeg",
-              "height": 256,
-              "width": 236
-          },
-          "109": {
-              "id": 109,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642398.0-3.512.jpeg",
-              "height": 512,
-              "width": 472
-          },
-          "110": {
-              "id": 110,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642399.0-4.720.jpeg",
-              "height": 720,
-              "width": 664
-          },
-          "111": {
-              "id": 111,
-              "uri": "https://isekaied-photos.us-southeast-1.linodeobjects.com/2/post.1705241642397.0-0.original.jpeg",
-              "height": 889,
-              "width": 820
-          }
-      },
-      "post": {
-          "3": {
-              "id": 3,
-              "caption": "Warning... HENTAI 🔥",
-              "contentRating": "R18",
-              "createdAt": "2023-10-09T17:07:45.000Z",
-              "likeCount": 3,
-              "commentsCount": 3,
-              "isLiked": 1,
-              "images": [
-                  12,
-                  13,
-                  14,
-                  15,
-                  16
-              ],
-              "user": 2
-          },
-          "5": {
-              "id": 5,
-              "caption": "",
-              "contentRating": "SFK",
-              "createdAt": "2023-12-29T10:18:02.000Z",
-              "likeCount": 1,
-              "commentsCount": 3,
-              "isLiked": 1,
-              "images": [
-                  26
-              ],
-              "user": 2
-          },
-          "7": {
-              "id": 7,
-              "caption": "Guess who  😂",
-              "contentRating": "SFK",
-              "createdAt": "2024-01-14T14:14:04.000Z",
-              "likeCount": 2,
-              "commentsCount": 4,
-              "isLiked": 1,
-              "images": [
-                  28
-              ],
-              "user": 2
-          }
-      },
-      "homeFeed-main": [
-          "post-7",
-          "post-5",
-          "post-3"
-      ],
-      "room": {
-          "38": {
-              "id": 38,
-              "updatedAt": "2023-12-05T13:25:14.423Z",
-              "title": null,
-              "isPrivate": true,
-              "participant": 78,
-              "lastMessage": "k"
-          },
-          "40": {
-              "id": 40,
-              "updatedAt": "2024-01-23T15:58:16.503Z",
-              "title": null,
-              "isPrivate": true,
-              "participant": 82,
-              "lastMessage": "Hey"
-          },
-          "41": {
-              "id": 41,
-              "updatedAt": "2024-01-23T16:17:53.701Z",
-              "title": null,
-              "isPrivate": true,
-              "participant": 85,
-              "lastMessage": "d",
-              "typing": [
-                  203
-              ]
-          }
-      },
-      "inbox-main": [
-          "room-41",
-          "room-40",
-          "room-38"
-      ],
-      "roomParticipant": {
-          "78": {
-              "id": 78,
-              "roomId": 38,
-              "isChatAccepted": 1,
-              "user": 3,
-              "room": 38
-          },
-          "82": {
-              "id": 82,
-              "roomId": 40,
-              "isChatAccepted": 1,
-              "user": 201,
-              "room": 40
-          },
-          "85": {
-              "id": 85,
-              "roomId": 41,
-              "isChatAccepted": 1,
-              "user": 203,
-              "room": 41
-          }
-      }
-  },
-  "references": {
-      "thumbnail": {
-          "40": [
-              "image.11.thumbnails"
-          ],
-          "41": [
-              "image.11.thumbnails"
-          ],
-          "42": [
-              "image.11.thumbnails"
-          ],
-          "43": [
-              "image.12.thumbnails"
-          ],
-          "44": [
-              "image.12.thumbnails"
-          ],
-          "45": [
-              "image.12.thumbnails"
-          ],
-          "46": [
-              "image.12.thumbnails"
-          ],
-          "47": [
-              "image.12.thumbnails"
-          ],
-          "48": [
-              "image.13.thumbnails"
-          ],
-          "49": [
-              "image.13.thumbnails"
-          ],
-          "50": [
-              "image.13.thumbnails"
-          ],
-          "51": [
-              "image.13.thumbnails"
-          ],
-          "52": [
-              "image.13.thumbnails"
-          ],
-          "53": [
-              "image.14.thumbnails"
-          ],
-          "54": [
-              "image.14.thumbnails"
-          ],
-          "55": [
-              "image.14.thumbnails"
-          ],
-          "56": [
-              "image.14.thumbnails"
-          ],
-          "57": [
-              "image.14.thumbnails"
-          ],
-          "58": [
-              "image.15.thumbnails"
-          ],
-          "59": [
-              "image.15.thumbnails"
-          ],
-          "60": [
-              "image.15.thumbnails"
-          ],
-          "61": [
-              "image.15.thumbnails"
-          ],
-          "62": [
-              "image.15.thumbnails"
-          ],
-          "63": [
-              "image.16.thumbnails"
-          ],
-          "64": [
-              "image.16.thumbnails"
-          ],
-          "65": [
-              "image.16.thumbnails"
-          ],
-          "66": [
-              "image.16.thumbnails"
-          ],
-          "67": [
-              "image.16.thumbnails"
-          ],
-          "97": [
-              "image.26.thumbnails"
-          ],
-          "98": [
-              "image.26.thumbnails"
-          ],
-          "99": [
-              "image.26.thumbnails"
-          ],
-          "100": [
-              "image.26.thumbnails"
-          ],
-          "101": [
-              "image.26.thumbnails"
-          ],
-          "107": [
-              "image.28.thumbnails"
-          ],
-          "108": [
-              "image.28.thumbnails"
-          ],
-          "109": [
-              "image.28.thumbnails"
-          ],
-          "110": [
-              "image.28.thumbnails"
-          ],
-          "111": [
-              "image.28.thumbnails"
-          ]
-      },
-      "image": {
-          "11": [
-              "user.2.profileImage"
-          ],
-          "12": [
-              "post.3.images"
-          ],
-          "13": [
-              "post.3.images"
-          ],
-          "14": [
-              "post.3.images"
-          ],
-          "15": [
-              "post.3.images"
-          ],
-          "16": [
-              "post.3.images"
-          ],
-          "26": [
-              "post.5.images"
-          ],
-          "28": [
-              "post.7.images"
-          ]
-      },
-      "user": {
-          "2": [
-              "post.7.user",
-              "post.5.user",
-              "post.3.user"
-          ],
-          "3": [
-              "roomParticipant.78.user"
-          ],
-          "201": [
-              "roomParticipant.82.user"
-          ],
-          "203": [
-              "roomParticipant.85.user",
-              "room.41.typing"
-          ]
-      },
-      "roomParticipant": {
-          "78": [
-              "user.3.roomMembership",
-              "room.38.participant"
-          ],
-          "82": [
-              "user.201.roomMembership",
-              "room.40.participant"
-          ],
-          "85": [
-              "user.203.roomMembership",
-              "room.41.participant"
-          ]
-      },
-      "room": {
-          "38": [
-              "roomParticipant.78.room"
-          ],
-          "40": [
-              "roomParticipant.82.room"
-          ],
-          "41": [
-              "roomParticipant.85.room"
-          ]
-      }
-  }
-})
 
+// function mutate(roomId: number, isTyping: boolean, user: {id: number, username: string}) {
 
-function mutate(roomId: number, isTyping: boolean, user: {id: number, username: string}) {
-  
-  store.mutateWhere<"room", any>({
-    from: "room",
-    where: { id: roomId },
-    fields: ["typing"],
-    join: [{ on: "typing", fields: ["id", "username"] }],
-  },
-  (current) => {
-    const roomTyping = current?.typing ?? [];
-  
-    // Find the users index in room.typing
-    const userIndex =
-      roomTyping.findIndex((u: any) => u.id === user.id) ?? -1;
-  
-    // If the user is typing and the userIndex is not found in room.typing, add the user
-    if (isTyping && userIndex === -1)
-      return { id: roomId, typing: [...roomTyping, user] };
-  
-    // If the user index is not found in room.typing OR if the user is typing and the index is not found skip any updates
-    if (userIndex === -1 || (isTyping && userIndex !== -1)) return null;
-  
-    // Otherwise the user is not typing so remove him from room.typing
-    return {
-      id: roomId,
-      typing: roomTyping.filter((u: any) => u.id !== user.id),
-    };
-  });
-}
+//   store.mutateWhere<"room", any>({
+//     from: "room",
+//     where: { id: roomId },
+//     fields: ["typing"],
+//     join: [{ on: "typing", fields: ["id", "username"] }],
+//   },
+//   (current) => {
+//     const roomTyping = current?.typing ?? [];
 
-mutate(41, true, {id: 203, username: "abc"})
-console.log(store.getState()["room"][41])
+//     // Find the users index in room.typing
+//     const userIndex =
+//       roomTyping.findIndex((u: any) => u.id === user.id) ?? -1;
 
-mutate(41, false, {id: 203, username: "abc"})
+//     // If the user is typing and the userIndex is not found in room.typing, add the user
+//     if (isTyping && userIndex === -1)
+//       return { id: roomId, typing: [...roomTyping, user] };
 
-// console.log(store.getState());
-console.log(store.getState()["room"][41])
+//     // If the user index is not found in room.typing OR if the user is typing and the index is not found skip any updates
+//     if (userIndex === -1 || (isTyping && userIndex !== -1)) return null;
 
-export type From =
-  | "user"
-  | "post"
-  | "image"
-  | "thumbnail"
-  | "postComment"
-  | "room"
-  | "roomParticipant"
-  | "message";
+//     // Otherwise the user is not typing so remove him from room.typing
+//     return {
+//       id: roomId,
+//       typing: roomTyping.filter((u: any) => u.id !== user.id),
+//     };
+//   });
+// }
+
+// mutate(41, true, {id: 203, username: "abc"})
+// console.log(store.getState()["room"][41])
+
+// mutate(41, false, {id: 203, username: "abc"})
+
+// // console.log(store.getState());
+// console.log(store.getState()["room"][41])
+
+// export type From =
+//   | "user"
+//   | "post"
+//   | "image"
+//   | "thumbnail"
+//   | "postComment"
+//   | "room"
+//   | "roomParticipant"
+//   | "message";
 
 // /**
 //  * Example data
@@ -1311,3 +1310,158 @@ export type From =
 // }))
 // console.log(store.getReferences()["user"][1])
 // console.log(store.getReferences()["post"])
+
+function bench(name: string, callback: () => void, runs = 1, warmUpRuns = 0) {
+  let totalTime = 0;
+
+  // Warm-up runs
+  for (let i = 0; i < warmUpRuns; i++) {
+    callback();
+  }
+
+  // Actual benchmark runs
+  for (let i = 0; i < runs; i++) {
+    const start = performance.now();
+    try {
+      callback();
+    } catch (error) {
+      console.error(`[${name}] Error during benchmark:`, error);
+      return;
+    }
+    const time = performance.now() - start;
+    totalTime += time;
+  }
+
+  const averageTime = totalTime / runs;
+  console.log(`[${name}]: Average time: ${averageTime.toFixed(3)}ms`);
+}
+
+import { faker } from "@faker-js/faker";
+
+const user = createRelationalObject("user");
+const image = createRelationalObject("image");
+
+user.hasOne(image, "profileImage");
+user.hasMany(image, "gallery");
+
+const store = createStore({
+  relationalCreators: [user, image],
+  identifier: {
+    user: (o) => "username" in o,
+    image: (o) => "url" in o,
+  },
+});
+
+function generateRandomId() {
+  const timestamp = Date.now();
+  const randomNumber = Math.floor(Math.random() * 1000000);
+  return `${timestamp}-${randomNumber}`;
+}
+
+function createImage() {
+  const url = faker.image.url();
+  return { id: generateRandomId(), url };
+}
+
+function createUser(_: any, id: number) {
+  const username = faker.person.firstName();
+
+  return {
+    id,
+    username,
+    profileImage: createImage(),
+    gallery: [createImage(), createImage(), createImage()],
+  };
+}
+
+const users = new Array(100_000).fill(0).map(createUser);
+
+const BENCH = {
+  runs: 10,
+  warmups: 0,
+};
+
+bench(
+  "Add users",
+  () => {
+    store.mutate(users);
+  },
+  BENCH.runs,
+  BENCH.warmups
+);
+
+store.purge()
+store.mutate(users)
+
+bench(
+  "Select by id",
+  () => {
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { id: 45876 },
+    });
+  },
+  BENCH.runs,
+  BENCH.warmups
+);
+
+bench(
+  "Select by username",
+  () => {
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: "Joey" },
+    });
+  },
+  BENCH.runs,
+  BENCH.warmups
+);
+
+bench(
+  "Select by username /w join",
+  () => {
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: "Joey" },
+      join: [
+        { on: "profileImage", fields: "*" },
+        { on: "gallery", fields: "*" },
+      ],
+    });
+  },
+  BENCH.runs,
+  BENCH.warmups
+);
+
+bench(
+  "Select by username /w fn",
+  () => {
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: (f: string) => f === "Joey" },
+    });
+  },
+  BENCH.runs,
+  BENCH.warmups
+);
+
+bench(
+  "Select by username /w fn /w join",
+  () => {
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: (f: string) => f === "Joey" },
+      join: [
+        { on: "profileImage", fields: "*" },
+        { on: "gallery", fields: "*" },
+      ],
+    });
+  },
+  BENCH.runs,
+  BENCH.warmups
+);

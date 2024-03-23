@@ -12,10 +12,10 @@ import { type ORS } from "../types";
 export default function selectFields<
   N extends string,
   O extends Record<string, any>
->(fields: ORS.SelectOptions<N, O>["fields"], object: O) {
+>(fields: ORS.SelectOptions<N, O>["fields"], object: O, where?: Partial<O>) {
   if (!object) return null;
 
-  const result: O = {} as O;
+  let result: O | null = null;
 
   const selectedFields = fields === "*" ? Object.keys(object) : fields;
 
@@ -26,7 +26,10 @@ export default function selectFields<
   for (let i = 0; i < selectedFields.length; i++) {
     const field = selectedFields[i];
     const value = object[field];
+    if (where && (where[field] === undefined || where[field] !== value))
+      continue;
     if (value === undefined) continue;
+    if (result === null) result = {} as O;
     result[field] = value;
   }
 
