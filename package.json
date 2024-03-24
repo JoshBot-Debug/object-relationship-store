@@ -1,6 +1,6 @@
 {
   "name": "@jjmyers/object-relationship-store",
-  "version": "3.2.7",
+  "version": "3.2.8",
   "description": "A javascript object relationship store.",
   "main": "build/index.js",
   "module": "build/index.esm.js",
@@ -16,7 +16,7 @@
   "scripts": {
     "test": "jest --watchAll",
     "index": "npx tsx --watch src/index.ts",
-    "build": "rm -r ./build & rm jjmyers-object-relationship-*.tgz & rollup -c --bundleConfigAsCjs && cp lib/types.d.ts build/types && npm pack"
+    "build": "rm -r ./build & rm jjmyers-object-relationship-*.tgz & rollup -c --bundleConfigAsCjs && cp lib/types.d.ts build && npm pack"
   },
   "files": [
     "build/*"
