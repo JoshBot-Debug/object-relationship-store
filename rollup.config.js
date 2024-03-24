@@ -2,13 +2,12 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
 import terser from "@rollup/plugin-terser";
-import dts from "rollup-plugin-dts";
 
 const packageJson = require("./package.json");
 
 export default [
   {
-    input: "src/lib/index.ts",
+    input: "lib/index.ts",
     output: [
       {
         file: packageJson.main,
@@ -24,13 +23,12 @@ export default [
     plugins: [
       resolve(),
       commonjs(),
-      typescript({tsconfig: "./tsconfig.rollup.json"}),
-      terser()
+      typescript({
+        include: ["lib/**"],
+        declaration: true,
+        declarationDir: "build/types"
+      }),
+      terser(),
     ],
   },
-  {
-    input: "src/lib/index.ts",
-    output: [{ file: "build/index.d.ts", format: "es" }],
-    plugins: [dts.default()],
-  }
 ];

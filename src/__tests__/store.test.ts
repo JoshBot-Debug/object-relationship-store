@@ -3,7 +3,7 @@ import {
   createRelationalObject,
   createRelationalObjectIndex,
   createStore,
-} from "../lib/index";
+} from "../../lib/index";
 import v8 from "v8";
 
 function getObjectMemoryUsageInMB(object: any) {

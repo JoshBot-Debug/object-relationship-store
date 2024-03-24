@@ -1,10 +1,10 @@
 import { posts as anArrayOfPostObjects } from "./data";
-import withOptions from "./lib/helper/withOptions";
+import withOptions from "../lib/helper/withOptions";
 import {
   createStore,
   createRelationalObject,
   createRelationalObjectIndex,
-} from "./lib/index";
+} from "../lib/index";
 
 // const user = createRelationalObject("user");
 // const image = createRelationalObject("image");
