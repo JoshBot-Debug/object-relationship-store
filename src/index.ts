@@ -1377,8 +1377,8 @@ function createUser(_: any, id: number) {
 const users = new Array(100_000).fill(0).map(createUser);
 
 const BENCH = {
-  runs: 10,
-  warmups: 0,
+  runs: 20,
+  warmups: 20,
 };
 
 bench(
@@ -1442,7 +1442,7 @@ bench(
     store.select<any, any>({
       from: "user",
       fields: "*",
-      where: { username: (f: string) => f === "Joey" },
+      where: (f) => f.username === "Joey",
     });
   },
   BENCH.runs,
@@ -1455,7 +1455,7 @@ bench(
     store.select<any, any>({
       from: "user",
       fields: "*",
-      where: { username: (f: string) => f === "Joey" },
+      where: (f) => f.username === "Joey",
       join: [
         { on: "profileImage", fields: "*" },
         { on: "gallery", fields: "*" },

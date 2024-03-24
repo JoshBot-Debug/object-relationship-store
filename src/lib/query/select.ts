@@ -53,8 +53,12 @@ export default function select<N extends string, O extends Record<string, any>>(
       // If a match is found, select the fields and break the loop.
       const entries = Object.entries(table);
       for (let i = 0; i < entries.length; i++) {
-        const selected = selectFields(fields, entries[i][1], where);
-        if (selected) result.push(selected);
+        const object = entries[i][1];
+        const match = findMatch(where, object)
+        if(match) {
+          const selected = selectFields(fields, object);
+          if (selected) result.push(selected);
+        }
       }
     }
   }

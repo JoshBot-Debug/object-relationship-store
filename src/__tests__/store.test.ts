@@ -1754,15 +1754,253 @@ test("#A was added to an index, later it was updated and added in the index.", (
   store.mutate({ ..._a, __indexes__: "as-main" });
 
   expect(store.getState()).toStrictEqual({
-    a: { '1': { id: 1, isA: true, isMember: true } },
-    'as-main': [ 'a-1' ]
+    a: { "1": { id: 1, isA: true, isMember: true } },
+    "as-main": ["a-1"],
   });
 
   // A is not member
   store.mutate({ ..._a, isMember: false, __indexes__: "as-main" });
 
   expect(store.getState()).toStrictEqual({
-    a: { '1': { id: 1, isA: true, isMember: false } },
-    'as-main': [ 'a-1' ]
+    a: { "1": { id: 1, isA: true, isMember: false } },
+    "as-main": ["a-1"],
   });
+});
+
+function getStore() {
+  const thumbnail = createRelationalObject("thumbnail");
+  const image = createRelationalObject("image");
+  const user = createRelationalObject("user");
+  user.hasOne(image, "profileImage");
+  user.hasOne(image, "bannerImage");
+  user.hasOne(image, "layoutImage");
+  image.hasMany(thumbnail, "thumbnails");
+
+  const store = createStore({
+    relationalCreators: [user, image, thumbnail],
+    identifier: {
+      user: (o) => "username" in o,
+      image: (o) => "aspectRatio" in o,
+      thumbnail: (o) => "uri" in o,
+    },
+  });
+
+  store.mutate({
+    id: 2,
+    username: "josh",
+    profileImage: {
+      id: 39,
+      aspectRatio: 1.77778,
+      thumbnails: [
+        {
+          id: 135,
+          uri: "/2/profilePhoto.256.webp",
+        },
+        {
+          id: 136,
+          uri: "/2/profilePhoto.512.webp",
+        },
+        {
+          id: 137,
+          uri: "/2/profilePhoto.original.webp",
+        },
+      ],
+    },
+    bannerImage: {
+      id: 33,
+      aspectRatio: 1.77778,
+      thumbnails: [
+        {
+          id: 113,
+          uri: "/2/bannerImage.512.jpeg",
+        },
+        {
+          id: 114,
+          uri: "/2/bannerImage.720.jpeg",
+        },
+        {
+          id: 115,
+          uri: "/2/bannerImage.original.jpeg",
+        },
+      ],
+    },
+    layoutImage: {
+      id: 34,
+      aspectRatio: 1.83673,
+      thumbnails: [
+        {
+          id: 116,
+          uri: "/2/layoutImage.1080.jpeg",
+        },
+        {
+          id: 117,
+          uri: "/2/layoutImage.1920.jpeg",
+        },
+        {
+          id: 118,
+          uri: "/2/layoutImage.original.jpeg",
+        },
+      ],
+    },
+  });
+
+  return store;
+}
+
+test("Select data", () => {
+  const store = getStore();
+
+  const result = store.select<any, any>({
+    from: "user",
+    fields: "*",
+    where: { username: "josh" },
+  });
+
+  expect(result).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+      profileImage: 39,
+      bannerImage: 33,
+      layoutImage: 34,
+    },
+  ]);
+});
+
+test("Select data /w join", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: "josh" },
+      join: [{ on: "profileImage", fields: "*" }],
+    })
+  ).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+      profileImage: {
+        id: 39,
+        aspectRatio: 1.77778,
+        thumbnails: [135, 136, 137],
+      },
+      bannerImage: 33,
+      layoutImage: 34,
+    },
+  ]);
+});
+
+test("Select data /w join /w selective fields", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: "josh" },
+      join: [{ on: "profileImage", fields: ["id"] }],
+    })
+  ).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+      profileImage: {
+        id: 39,
+      },
+      bannerImage: 33,
+      layoutImage: 34,
+    },
+  ]);
+});
+
+test("Select data /w join one to one /w join on one to many", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: "*",
+      where: { username: "josh" },
+      join: [{ on: "profileImage", fields: ["id", "thumbnails"] }],
+    })
+  ).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+      profileImage: {
+        id: 39,
+        thumbnails: [135, 136, 137],
+      },
+      bannerImage: 33,
+      layoutImage: 34,
+    },
+  ]);
+});
+
+test("Select data /w selective fields", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: ["id", "username"],
+      where: { username: "josh" },
+    })
+  ).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+    },
+  ]);
+});
+
+test("Select data /w select by primary key", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: ["id", "username"],
+      where: { id: 2 },
+    })
+  ).toStrictEqual({
+    id: 2,
+    username: "josh",
+  });
+});
+
+test("Select data /w where *", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: ["id", "username"],
+      where: "*",
+    })
+  ).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+    },
+  ]);
+});
+
+test("Select data /w where function", () => {
+  const store = getStore();
+
+  expect(
+    store.select<any, any>({
+      from: "user",
+      fields: ["id", "username"],
+      where: (o) => o.id === 2,
+    })
+  ).toStrictEqual([
+    {
+      id: 2,
+      username: "josh",
+    },
+  ]);
 });
