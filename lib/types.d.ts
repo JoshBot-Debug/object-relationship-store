@@ -1,7 +1,6 @@
 import { createStore } from "./createStore";
 
 export namespace ORS {
-
   export interface Model<N extends string = string> {
     [name: N]: RelationalObject<N>;
   }

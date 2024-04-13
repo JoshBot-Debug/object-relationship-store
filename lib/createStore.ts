@@ -1,7 +1,7 @@
-import { type ORS } from "./types";
 import querySelect from "./query/select";
 import { deepCopy, memo } from "./utils";
 import withOptions from "./helper/withOptions";
+import { ORS } from "./types";
 
 export function createStore<
   N extends string,
@@ -769,7 +769,7 @@ export function createStore<
           !queryOptions?.where(object)
         )
           continue;
-        result.push(object);
+        result.push(object as O);
       }
 
       return result;

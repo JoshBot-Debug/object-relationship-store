@@ -1340,12 +1340,16 @@ import { faker } from "@faker-js/faker";
 
 const user = createRelationalObject("user");
 const image = createRelationalObject("image");
+const home = createRelationalObjectIndex("home", [user], (a, b) => {
+  return a.id > b.id ? 1 : -1
+});
 
 user.hasOne(image, "profileImage");
 user.hasMany(image, "gallery");
 
 const store = createStore({
   relationalCreators: [user, image],
+  indexes: [home],
   identifier: {
     user: (o) => "username" in o,
     image: (o) => "url" in o,
@@ -1374,94 +1378,102 @@ function createUser(_: any, id: number) {
   };
 }
 
-const users = new Array(100_000).fill(0).map(createUser);
+const users = new Array(10).fill(0).flatMap((v, i) => i % 2 ? createUser(v, i) : []);
 
 const BENCH = {
-  runs: 20,
-  warmups: 20,
+  runs: 1,
+  warmups: 0,
 };
 
-bench(
-  "Add users",
-  () => {
-    store.mutate(users);
-  },
-  BENCH.runs,
-  BENCH.warmups
-);
+// bench(
+//   "Add users",
+//   () => {
+//     store.mutate(users);
+//   },
+//   BENCH.runs,
+//   BENCH.warmups
+// );
 
-store.purge()
-store.mutate(users)
+// store.purge();
+store.mutate(users.map((u) => ({ ...u, __indexes__: "home-1" })));
 
-bench(
-  "Select by id",
-  () => {
-    store.select<any, any>({
-      from: "user",
-      fields: "*",
-      where: { id: 45876 },
-    });
-  },
-  BENCH.runs,
-  BENCH.warmups
-);
+// bench(
+//   "Select by id",
+//   () => {
+//     store.select<any, any>({
+//       from: "user",
+//       fields: "*",
+//       where: { id: 45876 },
+//     });
+//   },
+//   BENCH.runs,
+//   BENCH.warmups
+// );
 
-bench(
-  "Select by username",
-  () => {
-    store.select<any, any>({
-      from: "user",
-      fields: "*",
-      where: { username: "Joey" },
-    });
-  },
-  BENCH.runs,
-  BENCH.warmups
-);
+// bench(
+//   "Select by username",
+//   () => {
+//     store.select<any, any>({
+//       from: "user",
+//       fields: "*",
+//       where: { username: "Joey" },
+//     });
+//   },
+//   BENCH.runs,
+//   BENCH.warmups
+// );
 
-bench(
-  "Select by username /w join",
-  () => {
-    store.select<any, any>({
-      from: "user",
-      fields: "*",
-      where: { username: "Joey" },
-      join: [
-        { on: "profileImage", fields: "*" },
-        { on: "gallery", fields: "*" },
-      ],
-    });
-  },
-  BENCH.runs,
-  BENCH.warmups
-);
+// bench(
+//   "Select by username /w join",
+//   () => {
+//     store.select<any, any>({
+//       from: "user",
+//       fields: "*",
+//       where: { username: "Joey" },
+//       join: [
+//         { on: "profileImage", fields: "*" },
+//         { on: "gallery", fields: "*" },
+//       ],
+//     });
+//   },
+//   BENCH.runs,
+//   BENCH.warmups
+// );
 
-bench(
-  "Select by username /w fn",
-  () => {
-    store.select<any, any>({
-      from: "user",
-      fields: "*",
-      where: (f) => f.username === "Joey",
-    });
-  },
-  BENCH.runs,
-  BENCH.warmups
-);
+// bench(
+//   "Select by username /w fn",
+//   () => {
+//     store.select<any, any>({
+//       from: "user",
+//       fields: "*",
+//       where: (f) => f.username === "Joey",
+//     });
+//   },
+//   BENCH.runs,
+//   BENCH.warmups
+// );
 
-bench(
-  "Select by username /w fn /w join",
-  () => {
-    store.select<any, any>({
-      from: "user",
-      fields: "*",
-      where: (f) => f.username === "Joey",
-      join: [
-        { on: "profileImage", fields: "*" },
-        { on: "gallery", fields: "*" },
-      ],
-    });
-  },
-  BENCH.runs,
-  BENCH.warmups
-);
+// bench(
+//   "Select by username /w fn /w join",
+//   () => {
+//     store.select<any, any>({
+//       from: "user",
+//       fields: "*",
+//       where: (f) => f.username === "Joey",
+//       join: [
+//         { on: "profileImage", fields: "*" },
+//         { on: "gallery", fields: "*" },
+//       ],
+//     });
+//   },
+//   BENCH.runs,
+//   BENCH.warmups
+// );
+
+store.subscribe(() => {
+  console.log("SUB", store.selectIndex("home-1", { user: {from: "user", fields: ["id"]} }));
+})
+
+store.mutate({id: 2, username: "TEST", __indexes__: "home-1"})
+store.mutate({id: 4, username: "TEST", __indexes__: "home-1"})
+

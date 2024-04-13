@@ -1,10 +1,10 @@
 {
   "name": "@jjmyers/object-relationship-store",
-  "version": "3.2.8",
+  "version": "3.3.0",
   "description": "A javascript object relationship store.",
   "main": "build/index.js",
   "module": "build/index.esm.js",
-  "types": "build/types",
+  "types": "build",
   "private": false,
   "publishConfig": {
     "access": "public"

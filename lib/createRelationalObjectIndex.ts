@@ -1,4 +1,4 @@
-import { type ORS } from "./types";
+import { ORS } from "./types"
 
 /**
  * Creates an object index. 

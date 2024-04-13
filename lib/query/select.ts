@@ -1,4 +1,4 @@
-import { type ORS } from "../types";
+import { ORS } from "../types";
 import findMatch from "./findMatch";
 import selectFields from "./selectFields";
 

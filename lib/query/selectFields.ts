@@ -1,4 +1,4 @@
-import { type ORS } from "../types";
+import { ORS } from "../types";
 
 /**
  * This method does not mutate the object,

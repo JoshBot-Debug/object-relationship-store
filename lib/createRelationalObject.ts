@@ -1,5 +1,4 @@
-import { type ORS} from "./types";
-
+import { ORS } from "./types";
 
 function has<N extends string>(object: ORS.RelationalObject<N>, __has: ORS.Has<N>["__has"], __alias: string,): ORS.Has<N> {
   const {
