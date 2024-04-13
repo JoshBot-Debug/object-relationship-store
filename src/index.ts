@@ -1476,3 +1476,66 @@ store.mutate(users.map((u) => ({ ...u, __indexes__: "home-1" })));
 
 // store.mutate({id: 2, username: "TEST", __indexes__: "home-1"})
 // store.mutate({id: 4, username: "TEST", __indexes__: "home-1"})
+
+
+function extractIndexes(acc: [string, string][], object: any) {
+  if (typeof object.__indexes__ === "string") {
+    acc.push(object.__indexes__.split("-") as [string, string]);
+  }
+
+  if (Array.isArray(object.__indexes__)) {
+    const uids = object.__indexes__.reduce(
+      (a: [string, string][], c: any) => {
+        if (typeof c === "string") a.push(c.split("-") as [string, string]);
+        return a;
+      },
+      [] as [string, string][]
+    );
+    acc.push(...uids);
+  }
+
+  const keys = Object.keys(object);
+  for (let i = 0; i < keys.length; i++)
+    if (object[keys[i]] && typeof object[keys[i]] === "object")
+      extractIndexes(acc, object[keys[i]]);
+}
+
+const items: any = [
+  {
+    id: 1,
+    isThere: false,
+    another: {
+      __indexes__: null,
+      again: {
+        __indexes__: ["again-1", "again-2", null],
+
+        many2: [
+          {__indexes__: "many2-str"},
+          {__indexes__: ["many2-1", "many2-2"]},
+          null
+        ]
+      }
+    },
+    many: null
+  }
+];
+
+const indexes = items.reduce((acc: any, cur: any) => {
+  if (!cur) return acc;
+
+  if (typeof cur === "object") extractIndexes(acc, cur);
+
+  if (typeof cur.__indexes__ === "string") {
+    acc.push(cur.__indexes__.split("-") as [string, string]);
+  }
+  if (Array.isArray(cur.__indexes__)) {
+    const uids = cur.__indexes__.reduce((a: [string, string][], c: any) => {
+      if (typeof c === "string") a.push(c.split("-") as [string, string]);
+      return a;
+    }, []);
+    acc.push(...uids);
+  }
+  return acc;
+}, [] as [string, string][]);
+
+console.log(indexes)

@@ -99,15 +99,20 @@ export function createStore<
     }
 
     if (Array.isArray(object.__indexes__)) {
-      const uids = object.__indexes__.map(
-        (i: string) => i.split("-") as [string, string]
+      const uids = object.__indexes__.reduce(
+        (a: [string, string][], c: any) => {
+          if (typeof c === "string") a.push(c.split("-") as [string, string]);
+          return a;
+        },
+        [] as [string, string][]
       );
       acc.push(...uids);
     }
 
     const keys = Object.keys(object);
     for (let i = 0; i < keys.length; i++)
-      if (typeof object[keys[i]] === "object") extractIndexes(acc, object[keys[i]]);
+      if (object[keys[i]] && typeof object[keys[i]] === "object")
+        extractIndexes(acc, object[keys[i]]);
   }
 
   function mutate(payload: ORS.StoreObject<N, I> | ORS.StoreObject<N, I>[]) {
@@ -116,15 +121,18 @@ export function createStore<
     // The key __indexes__ will be deleted after it's used so we need to
     // get all the indexes before any operations
     const indexes = items.reduce((acc, cur) => {
+      if (!cur) return acc;
+
       if (typeof cur === "object") extractIndexes(acc, cur);
 
       if (typeof cur.__indexes__ === "string") {
         acc.push(cur.__indexes__.split("-") as [string, string]);
       }
       if (Array.isArray(cur.__indexes__)) {
-        const uids = cur.__indexes__.map(
-          (i) => i.split("-") as [string, string]
-        );
+        const uids = cur.__indexes__.reduce((a: [string, string][], c: any) => {
+          if (typeof c === "string") a.push(c.split("-") as [string, string]);
+          return a;
+        }, []);
         acc.push(...uids);
       }
       return acc;
