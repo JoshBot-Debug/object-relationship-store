@@ -93,17 +93,35 @@ export function createStore<
     return true;
   }
 
+  function extractIndexes(acc: [string, string][], object: any) {
+    if (typeof object.__indexes__ === "string") {
+      acc.push(object.__indexes__.split("-") as [string, string]);
+    }
+
+    if (Array.isArray(object.__indexes__)) {
+      const uids = object.__indexes__.map(
+        (i: string) => i.split("-") as [string, string]
+      );
+      acc.push(...uids);
+    }
+
+    const keys = Object.keys(object);
+    for (let i = 0; i < keys.length; i++)
+      if (typeof object[keys[i]] === "object") extractIndexes(acc, object[keys[i]]);
+  }
+
   function mutate(payload: ORS.StoreObject<N, I> | ORS.StoreObject<N, I>[]) {
     const items = deepCopy(Array.isArray(payload) ? payload : [payload]);
 
     // The key __indexes__ will be deleted after it's used so we need to
     // get all the indexes before any operations
     const indexes = items.reduce((acc, cur) => {
+      if (typeof cur === "object") extractIndexes(acc, cur);
+
       if (typeof cur.__indexes__ === "string") {
         acc.push(cur.__indexes__.split("-") as [string, string]);
-        return acc;
       }
-      if (cur.__indexes__) {
+      if (Array.isArray(cur.__indexes__)) {
         const uids = cur.__indexes__.map(
           (i) => i.split("-") as [string, string]
         );

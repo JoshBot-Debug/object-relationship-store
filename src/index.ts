@@ -1470,10 +1470,9 @@ store.mutate(users.map((u) => ({ ...u, __indexes__: "home-1" })));
 //   BENCH.warmups
 // );
 
-store.subscribe(() => {
-  console.log("SUB", store.selectIndex("home-1", { user: {from: "user", fields: ["id"]} }));
-})
+// store.subscribe(() => {
+//   console.log("SUB", store.selectIndex("home-1", { user: {from: "user", fields: ["id"]} }));
+// })
 
-store.mutate({id: 2, username: "TEST", __indexes__: "home-1"})
-store.mutate({id: 4, username: "TEST", __indexes__: "home-1"})
-
+// store.mutate({id: 2, username: "TEST", __indexes__: "home-1"})
+// store.mutate({id: 4, username: "TEST", __indexes__: "home-1"})
