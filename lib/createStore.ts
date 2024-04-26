@@ -8,7 +8,7 @@ export function createStore<
   I extends string,
   O extends string
 >(config: ORS.CreateStoreConfig<N, I, O>) {
-  const { relationalCreators, indexes, identifier, parse, initialStore } =
+  const { relationalCreators, indexes, identifier, initialStore } =
     config;
 
   const references: ORS.ReferenceStore = {
@@ -434,13 +434,10 @@ export function createStore<
       parentPrimaryKey?: string;
       parentFieldHasMany?: boolean;
     }) {
-      const { parentName, parentField, parentFieldHasMany, parentPrimaryKey } =
+      const { item, parentName, parentField, parentFieldHasMany, parentPrimaryKey } =
         params;
 
-      const name = identify(params.item);
-
-      const item =
-        parse && parse[name as N] ? parse[name as N](params.item) : params.item;
+      const name = identify(item);
 
       // @ts-ignore
       const relationalObject: ORS.RelationalObject<N> = model[name];

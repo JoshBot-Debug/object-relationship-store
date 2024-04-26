@@ -46,8 +46,6 @@ export namespace ORS {
 
   export type IdentifierFunction<T> = (object: T) => boolean;
 
-  export type ParseFunction<T> = (object: T) => any;
-
   export interface CreateStoreConfig<
     N extends string = string,
     I extends string = string,
@@ -66,8 +64,6 @@ export namespace ORS {
      *
      */
     identifier: { [K in N]: IdentifierFunction<any> };
-
-    parse?: { [K in N]: ParseFunction<any> };
 
     initialStore?: ORS.RestoreStore;
   }
